@@ -87,6 +87,7 @@ export const processComment = inngest.createFunction(
             input_schema: UpdateThemeTool.input_schema as Anthropic.Tool['input_schema'],
           },
         ],
+        tool_choice: { type: 'any' },
         messages: [{ role: 'user', content: comment.text }],
       })
 
