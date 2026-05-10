@@ -9,7 +9,7 @@ const SubmitSchema = z.object({
   text: z.string().min(1).max(500),
 })
 
-const RATE_LIMIT = 3
+const RATE_LIMIT = parseInt(process.env.RATE_LIMIT_PER_HOUR ?? '3', 10)
 const RATE_WINDOW_MS = 60 * 60 * 1000 // 1 hour
 
 export async function POST(req: Request) {
