@@ -12,10 +12,13 @@ export async function commitAndOpenPR(input: {
   patch: Record<string, unknown>
 }): Promise<string> {
   const branch = `agent/${input.commentId.slice(0, 8)}`
-  const filePath =
-    input.toolName === 'update_content'
-      ? 'content/hero.json'
-      : 'theme/tokens.json'
+  const filePathMap: Record<string, string> = {
+    update_content: 'content/hero.json',
+    update_theme: 'theme/tokens.json',
+    update_override: 'overrides/index.json',
+  }
+  const filePath = filePathMap[input.toolName]
+  if (!filePath) throw new Error(`Unknown tool name: ${input.toolName}`)
 
   // Get main branch SHA
   const { data: mainRef } = await octokit.git.getRef({

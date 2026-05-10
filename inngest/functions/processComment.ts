@@ -5,12 +5,15 @@ import { commitAndOpenPR } from '@/lib/github'
 import {
   HeroContentSchema,
   ThemeTokensSchema,
+  OverridesSchema,
   ModerationResultSchema,
   UpdateContentTool,
   UpdateThemeTool,
+  UpdateOverrideTool,
 } from '@/lib/schemas'
 import contentJson from '@/content/hero.json'
 import themeJson from '@/theme/tokens.json'
+import overridesJson from '@/overrides/index.json'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -71,9 +74,11 @@ export const processComment = inngest.createFunction(
         system:
           'You apply visitor suggestions to a marketing site by calling the appropriate tool. ' +
           'Use update_content for copy changes (title, subtitle). ' +
-          'Use update_theme for color or visual changes (accent color). ' +
+          'Use update_theme for color changes (accent color). ' +
+          'Use update_override for typography and layout changes (font size, font weight, padding). ' +
           `Current content: ${JSON.stringify(contentJson)}. ` +
           `Current theme: ${JSON.stringify(themeJson)}. ` +
+          `Current overrides: ${JSON.stringify(overridesJson)}. ` +
           `The visitor is targeting element: ${comment.edit_id}.`,
         tools: [
           {
@@ -85,6 +90,11 @@ export const processComment = inngest.createFunction(
             name: UpdateThemeTool.name,
             description: UpdateThemeTool.description,
             input_schema: UpdateThemeTool.input_schema as Anthropic.Tool['input_schema'],
+          },
+          {
+            name: UpdateOverrideTool.name,
+            description: UpdateOverrideTool.description,
+            input_schema: UpdateOverrideTool.input_schema as Anthropic.Tool['input_schema'],
           },
         ],
         tool_choice: { type: 'any' },
@@ -105,6 +115,8 @@ export const processComment = inngest.createFunction(
         HeroContentSchema.parse({ ...contentJson, ...patch.input })
       } else if (patch.name === 'update_theme') {
         ThemeTokensSchema.parse({ ...themeJson, ...patch.input })
+      } else if (patch.name === 'update_override') {
+        OverridesSchema.parse({ ...overridesJson, ...patch.input })
       } else {
         throw new Error(`Unknown tool name: ${patch.name}`)
       }
@@ -121,9 +133,14 @@ export const processComment = inngest.createFunction(
       })
     })
 
-    // Step 6: Mark deployed
+    // Step 6: Mark merged
     await step.run('mark-merged', async () => {
-      const layer = patch.name === 'update_content' ? 'content' : 'theme'
+      const layerMap: Record<string, string> = {
+        update_content: 'content',
+        update_theme: 'theme',
+        update_override: 'override',
+      }
+      const layer = layerMap[patch.name] ?? patch.name
       await supabase
         .from('comments')
         .update({

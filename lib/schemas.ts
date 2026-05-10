@@ -15,6 +15,18 @@ export const ThemeTokensSchema = z.object({
     .regex(/^#[0-9A-Fa-f]{6}$/, 'Must be a 6-digit hex color e.g. #C8704D'),
 })
 
+export const OverridesSchema = z.object({
+  heroFontSize: z
+    .string()
+    .regex(/^\d+(\.\d+)?(rem|em|px|vh|vw)$/, 'Must be a valid CSS length e.g. 3rem'),
+  heroFontWeight: z
+    .string()
+    .regex(/^\d{3}$|^(normal|bold|lighter|bolder)$/, 'Must be a valid CSS font-weight e.g. 700'),
+  heroPadding: z
+    .string()
+    .regex(/^\d+(\.\d+)?(rem|em|px|vh|vw)$/, 'Must be a valid CSS length e.g. 6rem'),
+})
+
 // --- Anthropic tool definitions ---
 // Derived from the same schemas above — the LLM calls one of these tools
 // to emit a structured patch. The tool name determines which file gets updated.
@@ -52,6 +64,28 @@ export const UpdateThemeTool = {
   },
 }
 
+export const UpdateOverrideTool = {
+  name: 'update_override',
+  description: 'Update one or more layout/typography overrides in overrides/index.json',
+  input_schema: {
+    type: 'object' as const,
+    properties: {
+      heroFontSize: {
+        type: 'string',
+        description: 'Hero title font size as a CSS length e.g. 3rem, 48px',
+      },
+      heroFontWeight: {
+        type: 'string',
+        description: 'Hero title font weight e.g. 700, bold',
+      },
+      heroPadding: {
+        type: 'string',
+        description: 'Hero section top padding as a CSS length e.g. 6rem',
+      },
+    },
+  },
+}
+
 // --- Moderation schema ---
 // Shape of the response from the cheap moderation pass (Claude Haiku).
 
@@ -78,5 +112,6 @@ export const CommentSchema = z.object({
 
 export type HeroContent = z.infer<typeof HeroContentSchema>
 export type ThemeTokens = z.infer<typeof ThemeTokensSchema>
+export type Overrides = z.infer<typeof OverridesSchema>
 export type ModerationResult = z.infer<typeof ModerationResultSchema>
 export type Comment = z.infer<typeof CommentSchema>
