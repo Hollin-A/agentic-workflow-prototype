@@ -15,11 +15,13 @@ export default function EditableElement({
   tag,
   children,
   className,
+  style,
 }: {
   editId: string
   tag: ElementType
   children: ReactNode
   className?: string
+  style?: React.CSSProperties
 }) {
   const [open, setOpen] = useState(false)
   const [popoverPos, setPopoverPos] = useState({ top: 0, right: 0 })
@@ -55,6 +57,7 @@ export default function EditableElement({
       ref={ref}
       data-edit-id={editId}
       className={`group relative ${className ?? ''}`}
+      style={style}
     >
       {children}
       <button
