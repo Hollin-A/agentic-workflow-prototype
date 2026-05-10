@@ -1,3 +1,4 @@
+import ActivityFeed from '@/components/ActivityFeed'
 import EditableElement from '@/components/EditableElement'
 import hero from '@/content/hero.json'
 import tokens from '@/theme/tokens.json'
@@ -29,6 +30,8 @@ export default function Page() {
           />
           <span className="text-sm text-neutral-400 font-mono">{tokens.accent}</span>
         </EditableElement>
+
+        <ActivityFeed />
 
       </div>
     </main>
