@@ -11,6 +11,7 @@ const STATUS_LABEL: Record<Comment['status'], string> = {
   generating: 'Generating',
   merged: 'Merged',
   rejected: 'Rejected',
+  failed: 'Failed',
 }
 
 const STATUS_COLOR: Record<Comment['status'], string> = {
@@ -19,6 +20,7 @@ const STATUS_COLOR: Record<Comment['status'], string> = {
   generating: 'text-blue-500',
   merged: 'text-green-500',
   rejected: 'text-red-400',
+  failed: 'text-orange-500',
 }
 
 const STATUS_DOT: Record<Comment['status'], string> = {
@@ -27,6 +29,7 @@ const STATUS_DOT: Record<Comment['status'], string> = {
   generating: 'bg-blue-400 animate-pulse',
   merged: 'bg-green-400',
   rejected: 'bg-red-400',
+  failed: 'bg-orange-400',
 }
 
 export default function XRaySidebar() {

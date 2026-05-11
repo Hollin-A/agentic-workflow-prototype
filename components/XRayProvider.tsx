@@ -103,14 +103,17 @@ export default function XRayProvider({ children }: { children: ReactNode }) {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [active])
 
-  const lockedEditIds = useMemo(
-    () => new Set(
+  const lockedEditIds = useMemo(() => {
+    const cutoff = Date.now() - 30 * 60 * 1000
+    return new Set(
       comments
-        .filter((c) => ['queued', 'moderating', 'generating'].includes(c.status))
+        .filter((c) =>
+          ['queued', 'moderating', 'generating'].includes(c.status) &&
+          new Date(c.updated_at).getTime() > cutoff
+        )
         .map((c) => c.edit_id)
-    ),
-    [comments]
-  )
+    )
+  }, [comments])
 
   const activate = (focusId?: string) => {
     setActive(true)

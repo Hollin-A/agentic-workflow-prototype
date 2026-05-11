@@ -93,8 +93,9 @@ export default function EditableElement({
 
       {/* Lock indicator — shown when element is being processed */}
       {!xrayActive && isLocked && (
-        <span className="absolute -top-3 -right-3 w-6 h-6 rounded-full bg-amber-100 border border-amber-300 hidden group-hover:flex items-center justify-center z-10" title="Being updated…">
-          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+        <span className="absolute -top-3 -right-3 hidden group-hover:flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-700 rounded-full pl-1.5 pr-2.5 py-0.5 z-10 whitespace-nowrap shadow-sm">
+          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0" />
+          <span className="text-[10px] font-medium">Updating…</span>
         </span>
       )}
 

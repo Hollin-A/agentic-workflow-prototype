@@ -28,7 +28,20 @@ function resolveEditId(toolName: string, input: Record<string, unknown>): string
 }
 
 export const processComment = inngest.createFunction(
-  { id: 'process-comment', retries: 2, triggers: [{ event: 'comment/submitted' }] },
+  {
+    id: 'process-comment',
+    retries: 2,
+    triggers: [{ event: 'comment/submitted' }],
+    onFailure: async ({ event, step }: { event: { data: { event: { data: { comment_id: string } }; error: { message: string } } }; step: any }) => {
+      const commentId = event.data.event.data.comment_id
+      await step.run('mark-failed', async () => {
+        await supabase
+          .from('comments')
+          .update({ status: 'failed', reasoning: `Pipeline failed: ${event.data.error.message}` })
+          .eq('id', commentId)
+      })
+    },
+  },
   async ({ event, step }: { event: { data: { comment_id: string } }; step: any }) => {
     const commentId = event.data.comment_id
 
