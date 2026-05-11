@@ -39,8 +39,18 @@ const STATUS_BADGE_COLOR: Record<Comment['status'], string> = {
   moderating: 'bg-yellow-50 text-yellow-500',
   generating: 'bg-blue-50 text-blue-500',
   merged: 'bg-green-50 text-green-600',
-  rejected: 'bg-red-50 text-red-400',
-  failed: 'bg-orange-50 text-orange-500',
+  rejected: 'bg-red-100 text-red-600',
+  failed: 'bg-orange-100 text-orange-600',
+}
+
+const STATUS_LABEL: Partial<Record<Comment['status'], string>> = {
+  rejected: 'Rejected',
+  failed: 'Failed',
+}
+
+const ROW_BORDER: Partial<Record<Comment['status'], string>> = {
+  rejected: 'border-l-2 border-red-400',
+  failed: 'border-l-2 border-orange-400',
 }
 
 export default function ActivityPanel() {
@@ -107,7 +117,7 @@ export default function ActivityPanel() {
               const layer = layerTag(c.edit_id)
               const target = c.resolved_edit_id ?? c.edit_id
               return (
-                <li key={c.id} className="px-4 py-3 flex gap-3">
+                <li key={c.id} className={`px-4 py-3 flex gap-3 ${ROW_BORDER[c.status] ?? ''}`}>
                   <div className="mt-0.5 shrink-0">
                     <span
                       className={`flex w-5 h-5 rounded-full items-center justify-center text-[10px] font-bold ${STATUS_BADGE_COLOR[c.status]}`}
@@ -123,6 +133,11 @@ export default function ActivityPanel() {
                       <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${LAYER_COLOR[layer]}`}>
                         {layer}
                       </span>
+                      {STATUS_LABEL[c.status] && (
+                        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${STATUS_BADGE_COLOR[c.status]}`}>
+                          {STATUS_LABEL[c.status]}
+                        </span>
+                      )}
                       {c.pr_url && (
                         <a
                           href={c.pr_url}
