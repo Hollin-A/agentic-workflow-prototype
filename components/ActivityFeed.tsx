@@ -73,6 +73,9 @@ export default function ActivityFeed() {
                 )}
               </div>
               <p className="text-neutral-600 truncate">{c.text}</p>
+              <p className="text-[11px] text-neutral-400 mt-0.5">
+                {c.user_name ? `github:${c.user_name}` : 'anon'}
+              </p>
               {c.reasoning && (
                 <p className="text-xs text-neutral-400 mt-0.5 italic">{c.reasoning}</p>
               )}
