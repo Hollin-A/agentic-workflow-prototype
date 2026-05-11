@@ -3,6 +3,7 @@
 import { auth } from '@/auth'
 import { supabase } from '@/lib/supabase'
 import { redirect } from 'next/navigation'
+import { revalidatePath } from 'next/cache'
 
 async function assertAdmin() {
   const session = await auth()
@@ -17,4 +18,5 @@ export async function toggleKillSwitch(current: boolean) {
     .from('settings')
     .update({ value: current ? 'false' : 'true', updated_at: new Date().toISOString() })
     .eq('key', 'kill_switch')
+  revalidatePath('/admin')
 }
