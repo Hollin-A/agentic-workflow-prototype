@@ -1,7 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import { createBrowserClient } from '@/lib/supabase-browser'
+import { useXRay } from './XRayProvider'
 import type { Comment } from '@/lib/schemas'
 
 const STATUS_LABEL: Record<Comment['status'], string> = {
@@ -29,47 +28,10 @@ const STATUS_DOT: Record<Comment['status'], string> = {
 }
 
 export default function ActivityFeed() {
-  const [comments, setComments] = useState<Comment[]>([])
-  const supabase = useRef(createBrowserClient())
+  const { comments, activate } = useXRay()
+  const visible = comments.slice(0, 10)
 
-  useEffect(() => {
-    const client = supabase.current
-
-    client
-      .from('comments')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(10)
-      .then(({ data }) => {
-        if (data) setComments(data as Comment[])
-      })
-
-    const channel = client
-      .channel('comments-feed')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'comments' },
-        (payload) => {
-          const updated = payload.new as Comment
-          setComments((prev) => {
-            const idx = prev.findIndex((c) => c.id === updated.id)
-            if (idx !== -1) {
-              const next = [...prev]
-              next[idx] = updated
-              return next
-            }
-            return [updated, ...prev].slice(0, 10)
-          })
-        }
-      )
-      .subscribe()
-
-    return () => {
-      client.removeChannel(channel)
-    }
-  }, [])
-
-  if (comments.length === 0) return null
+  if (visible.length === 0) return null
 
   return (
     <div className="mt-20 border-t border-neutral-200 pt-10">
@@ -77,8 +39,12 @@ export default function ActivityFeed() {
         Live activity
       </h2>
       <ol className="space-y-4">
-        {comments.map((c) => (
-          <li key={c.id} className="flex gap-3 text-sm">
+        {visible.map((c) => (
+          <li
+            key={c.id}
+            onClick={() => activate(c.edit_id)}
+            className="flex gap-3 text-sm cursor-pointer rounded-lg p-2 -mx-2 hover:bg-neutral-50 transition-colors"
+          >
             <div className="mt-1.5 shrink-0">
               <span className={`block w-2 h-2 rounded-full ${STATUS_DOT[c.status]}`} />
             </div>
@@ -93,6 +59,7 @@ export default function ActivityFeed() {
                     href={c.pr_url}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
                     className="text-xs text-[var(--accent)] hover:underline"
                   >
                     PR →
