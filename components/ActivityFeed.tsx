@@ -73,9 +73,19 @@ export default function ActivityFeed() {
                 )}
               </div>
               <p className="text-neutral-600 truncate">{c.text}</p>
-              <p className="text-[11px] text-neutral-400 mt-0.5">
-                {c.user_name ? `github:${c.user_name}` : 'anon'}
-              </p>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                {c.user_id && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={`https://avatars.githubusercontent.com/u/${c.user_id}?s=16&v=4`}
+                    alt=""
+                    className="w-4 h-4 rounded-full"
+                  />
+                )}
+                <span className="text-[11px] text-neutral-400">
+                  {c.user_name ? `github:${c.user_name}` : 'anon'}
+                </span>
+              </div>
               {c.reasoning && (
                 <p className="text-xs text-neutral-400 mt-0.5 italic">{c.reasoning}</p>
               )}
