@@ -106,6 +106,20 @@ await step.run('check-hold', async () => {
 
 The Approve action in the admin panel calls a server action that re-triggers the pipeline from the `create-pr` step using Inngest's `invoke` or by sending a new event with the pre-validated patch.
 
+### Merge conflict risk on approval
+
+A held comment's patch is generated against the file content at the time it runs. If other suggestions merge while the comment is held, the patch becomes stale — approving it would silently overwrite whatever changed in the meantime. No git conflict is raised because the PR opens and merges cleanly; the staleness is semantic, not structural.
+
+**How to handle it: re-generate on approval**
+
+When the owner approves a held comment, do not use the stored patch. Instead re-run `generate-patch` against the current file content before calling `create-pr`. The agent re-executes the suggestion fresh, accounting for all changes that landed while the comment was held.
+
+This means the stored patch serves as a **preview** in the admin queue — it shows the owner what the agent intended — but the actual commit is always generated against current state. The owner is approving the *suggestion intent*, not the specific bytes.
+
+The pipeline change is minimal: the approve server action sends a new `comment/approved` Inngest event carrying only the `comment_id`. The pipeline re-runs from `generate-patch` onward, skipping the hold check this time (flagged by an `approved: true` field on the event).
+
+This risk is scoped to suggestions targeting the **same field**. If suggestion 10 touches `hero.title` and suggestions 11–30 only touch `theme.accent`, there is no conflict — the patches are independent. The re-generation approach handles all cases uniformly regardless.
+
 ---
 
 ## Summary table
