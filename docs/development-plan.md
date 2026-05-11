@@ -224,45 +224,30 @@ A toggleable overlay that makes the editable surface and pipeline state legible 
 
 ---
 
-## Phase 10 — Voting
+## Phase 10 — Element locking + resolved edit tracking
 
-Let visitors vote on pending suggestions to influence processing order.
+Prevent simultaneous conflicts by locking an element while its comment is in the pipeline. Also adds accurate tracking of which element the agent actually wrote to.
+
+**Why locking over voting:** voting introduces social mechanics and explanation complexity that aren't warranted at this stage. Locking is the simpler, more honest first step — an element being actively processed is genuinely unavailable, and visitors can clearly see why. Voting is preserved as a later option if scale demands it.
 
 **Tasks:**
-- Add `votes` table to Supabase: `id`, `comment_id` (FK to comments), `ip_hash`, `created_at`
-- Add unique constraint on `(comment_id, ip_hash)` to prevent duplicate votes
-- Create `app/api/vote/route.ts`: validate comment ID, hash IP, upsert vote row, return updated count
-- Update `ActivityFeed.tsx` to show a vote button and count on queued/moderating comments
-- Update Inngest `processComment` to order the queue by vote count when multiple comments are pending (highest votes processed first)
+- Add `resolved_edit_id` column to the `comments` table (nullable text) — populated by the pipeline after generation, set to the element that was actually modified (derived from the tool name and patch)
+- Update `processComment.ts` to write `resolved_edit_id` when marking the comment as merged
+- Update `CommentSchema` in `lib/schemas.ts` to include `resolved_edit_id`
+- On comment submission in `app/api/comment/route.ts`, check if any comment for the same `edit_id` is currently active (status in `queued`, `moderating`, `generating`) — if so, return 409 with a clear message
+- Update `EditableElement.tsx` to show a locked state when the element has an active comment: disable the comment icon, show a subtle indicator (e.g. pulsing dot or lock icon)
+- Update `ActivityFeed.tsx` and `XRaySidebar.tsx` to display `resolved_edit_id` when it differs from `edit_id`
 
 **Checkpoint:**
-- Vote on a queued comment → count increments in the feed in real time
-- Vote twice from the same IP → second vote is rejected (409)
-- Two comments queued simultaneously → higher-voted one is processed first
-- Voting on a merged or rejected comment → returns 400
+- Submit a comment on `hero.title` → while it's in the pipeline, the `hero.title` element shows a locked indicator and the comment icon is disabled
+- Submit a second comment on `hero.title` while the first is active → API returns 409
+- Submit a comment on `hero.subtitle` while `hero.title` is locked → proceeds normally (lock is per-element)
+- Comment a font size change via the `theme.accent` element → `edit_id` is `theme.accent`, `resolved_edit_id` is `override.typography` — feed shows the resolved target
+- Element unlocks once the comment reaches `merged` or `rejected`
 
 ---
 
-## Phase 11 — Conflict detection + decision windows
-
-Prevent two agent edits from overwriting each other on the same target.
-
-**Tasks:**
-- On comment submission, check if another comment targeting the same `edit_id` is already in `queued` or `moderating` state
-- If a conflict exists, set both to `status: 'contested'` and record a `decision_deadline` (e.g. 10 minutes from now)
-- Add a `contested` status to `CommentSchema` and `ActivityFeed` display
-- After the decision window expires, an Inngest scheduled function picks the higher-voted comment, sets it back to `queued`, and rejects the other with `reasoning: 'Lost conflict vote'`
-- If votes are tied, pick the earlier submission
-
-**Checkpoint:**
-- Submit two comments targeting `hero.title` in quick succession → both show `contested` in the feed
-- Vote on one → after the decision window, the higher-voted one proceeds, the other is rejected
-- Submit two comments targeting different elements → no conflict, both proceed independently
-- Tie-break: earlier submission wins
-
----
-
-## Phase 12 — Live page content refresh
+## Phase 11 — Live page content refresh
 
 Remove the manual-refresh requirement after an agent deployment.
 
@@ -277,7 +262,7 @@ Remove the manual-refresh requirement after an agent deployment.
 
 ---
 
-## Phase 13 — OAuth login
+## Phase 12 — OAuth login
 
 Replace anonymous submissions with attributed ones.
 
@@ -296,7 +281,7 @@ Replace anonymous submissions with attributed ones.
 
 ---
 
-## Phase 14 — Owner ops panel
+## Phase 13 — Owner ops panel
 
 Operational controls for the site owner.
 
@@ -316,4 +301,4 @@ Operational controls for the site owner.
 
 ## v1 Done
 
-When Phase 14 passes, v1 is complete. The system is production-ready with attribution, conflict resolution, operator controls, and a fully legible editing surface.
+When Phase 13 passes, v1 is complete. The system is production-ready with attribution, element locking, operator controls, and a fully legible editing surface.
