@@ -252,13 +252,15 @@ Prevent simultaneous conflicts by locking an element while its comment is in the
 Remove the manual-refresh requirement after an agent deployment.
 
 **Tasks:**
-- Add `export const revalidate = 60` to `app/page.tsx` to enable ISR with a 60-second window
-- Verify `hero.json` and `tokens.json` are read via `fs` (static import) — confirm Next.js treats them as data dependencies that trigger revalidation on rebuild
-- Test that after a Vercel deployment, the page reflects new content within 60 seconds without a manual refresh
+- Replace static JSON imports in `app/page.tsx` with `fs.readFileSync` calls so content, theme, and override files are read at render time (static imports are bundled at build time and never update during a running deployment)
+- Add `export const revalidate = 60` to `app/page.tsx` — this is the previous-model ISR config (Next.js 16 without `cacheComponents: true` uses route segment config, not the `use cache` directive)
+- Verify the build output shows `Revalidate: 1m` for the `/` route
 
 **Checkpoint:**
 - Submit a comment → agent merges PR → Vercel redeploys → page content updates within ~60 seconds without a manual refresh
 - A second browser tab open during the deployment picks up the new content on next background revalidation
+
+**Status: complete** — `export const revalidate = 60` + `fs.readFileSync` shipped in PR #24.
 
 ---
 
@@ -281,24 +283,60 @@ Replace anonymous submissions with attributed ones.
 
 ---
 
-## Phase 13 — Owner ops panel
+## Phase 13 — Floating activity panel
 
-Operational controls for the site owner.
+Move the activity feed from inline page content to a floating panel, making the default view look like a normal marketing site. The feed is only visible when deliberately opened.
+
+**Why now:** the inline feed breaks the "normal site" premise — a real visitor landing on the page should see a clean marketing site, not a live feed below the hero. The floating panel restores this, and its position (bottom-right) sets up the shared chrome that Phase 14's ops panel will build on.
 
 **Tasks:**
-- Create a protected route `app/admin/page.tsx` — accessible only to a hardcoded owner email (from env)
-- Moderation queue view: list all `queued` and `moderating` comments with manual approve/reject controls
-- Kill switch: env-gated flag that halts the Inngest pipeline before the generate-patch step
-- Spend cap display: read from Anthropic API usage endpoint and display current daily spend vs cap
-- Ban controls: add `banned_ips` table; check it in the comment submission API before inserting
+- Remove the inline `<ActivityFeed />` from `app/page.tsx`
+- Add an ambient pill component (bottom-right, fixed) that shows a live queue count and time of last change, sourced from `XRayProvider` comment state
+  - Pill design: pulse dot · **N** in queue · last change Xm ago
+  - Clicking the pill opens the activity panel
+- Build a floating activity panel (`components/ActivityPanel.tsx`) that renders as a fixed card (bottom-right, 420px wide, max-height 70vh):
+  - Panel header: pulse dot + "Live activity" title + close (×) button
+  - Stats bar: in queue · applied today · mod pass rate (counts derived from comment state)
+  - Feed list: each item shows a circular status badge (✓ / … / · / ! / ×), a styled `edit_id` target tag, the comment text, a layer tag (content / theme / override), the agent reasoning block with left border, and a relative timestamp
+  - Closing the panel returns to the ambient pill view
+- Integrate the ambient pill and X-ray button into a shared bottom-right cluster (pill on the left, X-ray button on the right — both always visible in normal and feed views; pill hides in X-ray view)
 
 **Checkpoint:**
-- Owner manually rejects a queued comment → status updates to `rejected`, pipeline does not proceed
-- Kill switch enabled → new comments are stored but pipeline halts at generate-patch
+- Default view shows a clean site with only the ambient pill cluster visible (no inline feed)
+- Clicking the ambient pill opens the floating panel; × closes it back to the pill
+- Panel updates in real time as comments progress through the pipeline
+- X-ray button remains accessible in both pill and panel states
+- No layout shift on the page content when panel opens/closes (panel is fixed, not in flow)
+
+---
+
+## Phase 14 — Owner ops panel
+
+Operational controls for the site owner, accessed at a separate URL. There is no public button or link to this route — the owner navigates directly by typing `/admin`.
+
+**Layout** (matches the reference design):
+- Full-page layout, distinct from the marketing site chrome
+- Left sidebar (240px, dark background `#14141A`): brand + OPS tag, nav sections (Operations: Overview / Moderation queue / Activity log / Cost & spend; Controls: Allowed scope / Rate limits / Banned users / Kill switches; System: Deploys / Agent prompts / Settings), owner avatar at bottom
+- Main content area: stats grid, moderation queue card, spend cap card, allowed scope card
+
+**Tasks:**
+- Create a protected route `app/admin/page.tsx` — gate by checking the session email against `ADMIN_EMAIL` env var; redirect to `/` if not authorized
+- **Stats grid**: suggestions today, applied count, spend today (vs cap), avg comment-to-deploy time — all read from Supabase
+- **Moderation queue**: list comments with status `held` (a new status for owner-review cases) — each item shows target tag, submitter, comment text, a flag reason, and Approve / Reject buttons
+- **Kill switch**: a toggle that sets an env-readable flag; when on, the Inngest pipeline halts before `generate-patch` and marks the comment as `held`
+- **Spend cap card**: progress bar showing daily Anthropic API spend vs the configured cap, with a projected-cap-hit time
+- **Allowed scope card**: read-only list of which layers are enabled (content / theme / override) — toggles are a later addition
+- **Ban controls**: add `banned_ips` table; check it in the comment submission API before inserting; surface banned entries in the admin panel
+
+**Checkpoint:**
+- Navigating to `/admin` without being logged in as the owner redirects to `/`
+- Owner manually rejects a held comment → status updates to `rejected`, pipeline does not proceed
+- Kill switch enabled → new comments are stored but pipeline halts at `generate-patch`, comment marked `held`
 - Banned IP submits a comment → 429 returned immediately, no row inserted
+- Stats grid reflects real Supabase data
 
 ---
 
 ## v1 Done
 
-When Phase 13 passes, v1 is complete. The system is production-ready with attribution, element locking, operator controls, and a fully legible editing surface.
+When Phase 14 passes, v1 is complete. The system is production-ready with attribution, element locking, a floating activity surface, and a private operator dashboard.
