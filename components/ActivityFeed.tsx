@@ -9,6 +9,7 @@ const STATUS_LABEL: Record<Comment['status'], string> = {
   generating: 'Generating',
   merged: 'Merged — deploying',
   rejected: 'Rejected',
+  failed: 'Failed',
 }
 
 const STATUS_COLOR: Record<Comment['status'], string> = {
@@ -17,6 +18,7 @@ const STATUS_COLOR: Record<Comment['status'], string> = {
   generating: 'text-blue-500',
   merged: 'text-green-500',
   rejected: 'text-red-400',
+  failed: 'text-orange-500',
 }
 
 const STATUS_DOT: Record<Comment['status'], string> = {
@@ -25,6 +27,7 @@ const STATUS_DOT: Record<Comment['status'], string> = {
   generating: 'bg-blue-400 animate-pulse',
   merged: 'bg-green-400 animate-pulse',
   rejected: 'bg-red-400',
+  failed: 'bg-orange-400',
 }
 
 export default function ActivityFeed() {
@@ -51,6 +54,9 @@ export default function ActivityFeed() {
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-mono text-xs text-neutral-400">{c.edit_id}</span>
+                {c.resolved_edit_id && c.resolved_edit_id !== c.edit_id && (
+                  <span className="font-mono text-xs text-neutral-400">→ {c.resolved_edit_id}</span>
+                )}
                 <span className={`text-xs font-medium ${STATUS_COLOR[c.status]}`}>
                   {STATUS_LABEL[c.status]}
                 </span>

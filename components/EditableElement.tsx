@@ -29,9 +29,10 @@ export default function EditableElement({
   const ref = useRef<HTMLElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const Tag = tag
-  const { active: xrayActive, focusedId, comments, activate } = useXRay()
+  const { active: xrayActive, focusedId, comments, lockedEditIds, activate } = useXRay()
   const commentCount = comments.filter((c) => c.edit_id === editId).length
   const isFocused = focusedId === editId
+  const isLocked = lockedEditIds.has(editId)
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -90,8 +91,16 @@ export default function EditableElement({
         </span>
       )}
 
-      {/* Comment icon — hidden in x-ray mode */}
-      {!xrayActive && (
+      {/* Lock indicator — shown when element is being processed */}
+      {!xrayActive && isLocked && (
+        <span className="absolute -top-3 -right-3 hidden group-hover:flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-700 rounded-full pl-1.5 pr-2.5 py-0.5 z-10 whitespace-nowrap shadow-sm">
+          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0" />
+          <span className="text-[10px] font-medium">Updating…</span>
+        </span>
+      )}
+
+      {/* Comment icon — hidden in x-ray mode and when locked */}
+      {!xrayActive && !isLocked && (
         <button
           ref={buttonRef}
           onClick={handleOpen}

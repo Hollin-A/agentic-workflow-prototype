@@ -17,8 +17,31 @@ import overridesJson from '@/overrides/index.json'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
+function resolveEditId(toolName: string, input: Record<string, unknown>): string {
+  if (toolName === 'update_content') {
+    const key = Object.keys(input)[0]
+    return key === 'subtitle' ? 'hero.subtitle' : 'hero.title'
+  }
+  if (toolName === 'update_theme') return 'theme.accent'
+  if (toolName === 'update_override') return 'override.typography'
+  return toolName
+}
+
 export const processComment = inngest.createFunction(
-  { id: 'process-comment', retries: 2, triggers: [{ event: 'comment/submitted' }] },
+  {
+    id: 'process-comment',
+    retries: 2,
+    triggers: [{ event: 'comment/submitted' }],
+    onFailure: async ({ event, step }: { event: { data: { event: { data: { comment_id: string } }; error: { message: string } } }; step: any }) => {
+      const commentId = event.data.event.data.comment_id
+      await step.run('mark-failed', async () => {
+        await supabase
+          .from('comments')
+          .update({ status: 'failed', reasoning: `Pipeline failed: ${event.data.error.message}` })
+          .eq('id', commentId)
+      })
+    },
+  },
   async ({ event, step }: { event: { data: { comment_id: string } }; step: any }) => {
     const commentId = event.data.comment_id
 
@@ -141,12 +164,17 @@ export const processComment = inngest.createFunction(
         update_override: 'override',
       }
       const layer = layerMap[patch.name] ?? patch.name
+
+      // Derive which specific element was actually written to
+      const resolvedEditId = resolveEditId(patch.name, patch.input)
+
       await supabase
         .from('comments')
         .update({
           status: 'merged',
           patch,
           pr_url: prUrl,
+          resolved_edit_id: resolvedEditId,
           reasoning: `Routed to ${layer} layer. Target: ${comment.edit_id}.`,
         })
         .eq('id', commentId)

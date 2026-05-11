@@ -39,6 +39,23 @@ export async function POST(req: Request) {
     }
   }
 
+  // Lock check: reject if an active comment exists for this element updated within the last 30 minutes.
+  // The timeout prevents stale locks from pipeline failures that didn't trigger onFailure.
+  const LOCK_WINDOW_MS = 30 * 60 * 1000
+  const { count: activeCount } = await supabase
+    .from('comments')
+    .select('*', { count: 'exact', head: true })
+    .eq('edit_id', parsed.data.edit_id)
+    .in('status', ['queued', 'moderating', 'generating'])
+    .gte('updated_at', new Date(Date.now() - LOCK_WINDOW_MS).toISOString())
+
+  if ((activeCount ?? 0) > 0) {
+    return NextResponse.json(
+      { error: 'This element is currently being updated. Try again shortly.' },
+      { status: 409 }
+    )
+  }
+
   const { data, error } = await supabase
     .from('comments')
     .insert({
