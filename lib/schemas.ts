@@ -106,6 +106,7 @@ export const CommentSchema = z.object({
   reasoning: z.string().nullable(),
   patch: z.record(z.string(), z.unknown()).nullable(),
   pr_url: z.string().nullable(),
+  resolved_edit_id: z.string().nullable(),
   created_at: z.string(),
   updated_at: z.string(),
 })

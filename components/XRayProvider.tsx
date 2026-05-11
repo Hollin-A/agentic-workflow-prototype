@@ -4,6 +4,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
   ReactNode,
@@ -17,6 +18,7 @@ type XRayContextValue = {
   active: boolean
   focusedId: string | null
   comments: Comment[]
+  lockedEditIds: Set<string>
   activate: (focusId?: string) => void
   deactivate: () => void
   toggle: () => void
@@ -26,6 +28,7 @@ const XRayContext = createContext<XRayContextValue>({
   active: false,
   focusedId: null,
   comments: [],
+  lockedEditIds: new Set(),
   activate: () => {},
   deactivate: () => {},
   toggle: () => {},
@@ -100,6 +103,15 @@ export default function XRayProvider({ children }: { children: ReactNode }) {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [active])
 
+  const lockedEditIds = useMemo(
+    () => new Set(
+      comments
+        .filter((c) => ['queued', 'moderating', 'generating'].includes(c.status))
+        .map((c) => c.edit_id)
+    ),
+    [comments]
+  )
+
   const activate = (focusId?: string) => {
     setActive(true)
     setFocusedId(focusId ?? null)
@@ -118,7 +130,7 @@ export default function XRayProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <XRayContext.Provider value={{ active, focusedId, comments, activate, deactivate, toggle }}>
+    <XRayContext.Provider value={{ active, focusedId, comments, lockedEditIds, activate, deactivate, toggle }}>
       {children}
       <XRayPill />
       <XRaySidebar />

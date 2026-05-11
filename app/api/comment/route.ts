@@ -39,6 +39,20 @@ export async function POST(req: Request) {
     }
   }
 
+  // Lock check: reject if an active comment already exists for this element
+  const { count: activeCount } = await supabase
+    .from('comments')
+    .select('*', { count: 'exact', head: true })
+    .eq('edit_id', parsed.data.edit_id)
+    .in('status', ['queued', 'moderating', 'generating'])
+
+  if ((activeCount ?? 0) > 0) {
+    return NextResponse.json(
+      { error: 'This element is currently being updated. Try again shortly.' },
+      { status: 409 }
+    )
+  }
+
   const { data, error } = await supabase
     .from('comments')
     .insert({
