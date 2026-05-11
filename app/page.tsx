@@ -1,6 +1,5 @@
 import { readFileSync } from 'fs'
 import { join } from 'path'
-import ActivityFeed from '@/components/ActivityFeed'
 import EditableElement from '@/components/EditableElement'
 import type { HeroContent, ThemeTokens, Overrides } from '@/lib/schemas'
 
@@ -69,8 +68,6 @@ export default function Page() {
             </span>
           </EditableElement>
         </div>
-
-        <ActivityFeed />
 
       </div>
     </main>

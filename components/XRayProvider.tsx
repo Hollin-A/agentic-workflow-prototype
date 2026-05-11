@@ -13,6 +13,7 @@ import { createBrowserClient } from '@/lib/supabase-browser'
 import type { Comment } from '@/lib/schemas'
 import XRayPill from './XRayPill'
 import XRaySidebar from './XRaySidebar'
+import ActivityPanel from './ActivityPanel'
 
 type XRayContextValue = {
   active: boolean
@@ -22,6 +23,9 @@ type XRayContextValue = {
   activate: (focusId?: string) => void
   deactivate: () => void
   toggle: () => void
+  panelOpen: boolean
+  openPanel: () => void
+  closePanel: () => void
 }
 
 const XRayContext = createContext<XRayContextValue>({
@@ -32,6 +36,9 @@ const XRayContext = createContext<XRayContextValue>({
   activate: () => {},
   deactivate: () => {},
   toggle: () => {},
+  panelOpen: false,
+  openPanel: () => {},
+  closePanel: () => {},
 })
 
 export const useXRay = () => useContext(XRayContext)
@@ -40,6 +47,7 @@ export default function XRayProvider({ children }: { children: ReactNode }) {
   const [active, setActive] = useState(false)
   const [focusedId, setFocusedId] = useState<string | null>(null)
   const [comments, setComments] = useState<Comment[]>([])
+  const [panelOpen, setPanelOpen] = useState(false)
   const supabase = useRef(createBrowserClient())
 
   // Shared Supabase subscription — consumed by ActivityFeed and XRaySidebar
@@ -118,6 +126,7 @@ export default function XRayProvider({ children }: { children: ReactNode }) {
   const activate = (focusId?: string) => {
     setActive(true)
     setFocusedId(focusId ?? null)
+    setPanelOpen(false)
   }
 
   const deactivate = () => {
@@ -128,14 +137,19 @@ export default function XRayProvider({ children }: { children: ReactNode }) {
   const toggle = () => {
     setActive((v) => {
       if (v) setFocusedId(null)
+      else setPanelOpen(false)
       return !v
     })
   }
 
+  const openPanel = () => setPanelOpen(true)
+  const closePanel = () => setPanelOpen(false)
+
   return (
-    <XRayContext.Provider value={{ active, focusedId, comments, lockedEditIds, activate, deactivate, toggle }}>
+    <XRayContext.Provider value={{ active, focusedId, comments, lockedEditIds, activate, deactivate, toggle, panelOpen, openPanel, closePanel }}>
       {children}
       <XRayPill />
+      {panelOpen && <ActivityPanel />}
       <XRaySidebar />
     </XRayContext.Provider>
   )
