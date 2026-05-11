@@ -281,6 +281,12 @@ Replace anonymous submissions with attributed ones.
 - Anonymous user submits 4 comments in an hour → 4th is rejected with 429
 - User whose suggestion deploys receives a notification
 
+**Status: complete** — shipped in PR #34. Decisions and deviations:
+- GitHub-only OAuth (Google provider dropped — not needed for v1)
+- GitHub avatars derived at render time from stored `user_id` via `https://avatars.githubusercontent.com/u/{id}` — no separate storage needed
+- Attribution shown in activity panel and X-ray sidebar inline history
+- Notification on deploy not shipped — deferred
+
 ---
 
 ## Phase 13 — Floating activity panel
@@ -309,35 +315,50 @@ Move the activity feed from inline page content to a floating panel, making the 
 - X-ray button remains accessible in both pill and panel states
 - No layout shift on the page content when panel opens/closes (panel is fixed, not in flow)
 
+**Status: complete** — shipped in PRs #36. Decisions and deviations:
+- `ActivityFeed` component deleted; fully replaced by `ActivityPanel`
+- XRaySidebar status dot shows green pulse only when something is actively in-flight on that element (not the latest comment's status) — avoids ambiguity e.g. "Rejected · 14" reading as 14 rejections
+- Clicking an element row (or its label badge on the page) expands an inline history of the last 3 comments for that element in the sidebar; if more exist, a "see all in activity panel →" link opens the panel. The focused element is always the expanded one — no explicit collapse needed
+- Rejected/failed rows in the activity panel have a coloured left border and a text status pill for at-a-glance scanning
+- X-ray pill cluster hidden on `/admin` routes
+
 ---
 
 ## Phase 14 — Owner ops panel
 
 Operational controls for the site owner, accessed at a separate URL. There is no public button or link to this route — the owner navigates directly by typing `/admin`.
 
-**Layout** (matches the reference design):
+**Layout:**
 - Full-page layout, distinct from the marketing site chrome
-- Left sidebar (240px, dark background `#14141A`): brand + OPS tag, nav sections (Operations: Overview / Moderation queue / Activity log / Cost & spend; Controls: Allowed scope / Rate limits / Banned users / Kill switches; System: Deploys / Agent prompts / Settings), owner avatar at bottom
-- Main content area: stats grid, moderation queue card, spend cap card, allowed scope card
+- Left sidebar (240px, dark background `#14141A`): brand + OPS tag, nav sections with greyed-out items for deferred features
+- Main content area: stats grid, kill switch, activity log
 
 **Tasks:**
 - Create a protected route `app/admin/page.tsx` — gate by checking the session email against `ADMIN_EMAIL` env var; redirect to `/` if not authorized
-- **Stats grid**: suggestions today, applied count, spend today (vs cap), avg comment-to-deploy time — all read from Supabase
-- **Moderation queue**: list comments with status `held` (a new status for owner-review cases) — each item shows target tag, submitter, comment text, a flag reason, and Approve / Reject buttons
-- **Kill switch**: a toggle that sets an env-readable flag; when on, the Inngest pipeline halts before `generate-patch` and marks the comment as `held`
-- **Spend cap card**: progress bar showing daily Anthropic API spend vs the configured cap, with a projected-cap-hit time
-- **Allowed scope card**: read-only list of which layers are enabled (content / theme / override) — toggles are a later addition
-- **Ban controls**: add `banned_ips` table; check it in the comment submission API before inserting; surface banned entries in the admin panel
+- **Stats grid**: suggestions today, applied today, rejected today, in pipeline — all read from Supabase
+- **Kill switch**: a toggle stored in a `settings` Supabase table; when on, the pipeline halts at `check-kill-switch` (before any moderation or API spend) and marks the comment `failed`
+- **Activity log**: full unbounded real-time feed with status filter tabs (All / Active / Merged / Rejected), table view with target, suggestion, status, author, timestamp, PR link
 
 **Checkpoint:**
 - Navigating to `/admin` without being logged in as the owner redirects to `/`
-- Owner manually rejects a held comment → status updates to `rejected`, pipeline does not proceed
-- Kill switch enabled → new comments are stored but pipeline halts at `generate-patch`, comment marked `held`
-- Banned IP submits a comment → 429 returned immediately, no row inserted
+- Kill switch enabled → new comments halt before moderation, marked `failed` with "Pipeline halted by kill switch" reasoning
+- Activity log updates in real time and filters correctly by status
 - Stats grid reflects real Supabase data
+
+**Status: complete** — shipped in PR #37. Decisions and deviations:
+- Kill switch halts before moderation (not before `generate-patch` as originally planned) — stops all API spend immediately; marks comment `failed` (not `held`)
+- Stats grid simplified: suggestions today / applied today / rejected today / in pipeline (spend and avg deploy time deferred — require additional instrumentation)
+- X-ray pill cluster hidden on `/admin` routes
+
+**Deferred to v2:**
+- Moderation queue with `held` status and Approve / Reject actions
+- Spend cap card (requires cost tracking instrumented in the pipeline)
+- Allowed scope toggles (content / theme / override layers)
+- Ban controls (`banned_ips` table + submission API check)
+- Agent prompt editor
 
 ---
 
 ## v1 Done
 
-When Phase 14 passes, v1 is complete. The system is production-ready with attribution, element locking, a floating activity surface, and a private operator dashboard.
+Phases 8–14 complete. The system is production-ready with attribution, element locking, a floating activity surface, and a private operator dashboard.
