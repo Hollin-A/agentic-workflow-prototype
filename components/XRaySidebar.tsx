@@ -1,27 +1,9 @@
 'use client'
 
-import { useRef } from 'react'
+import { useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { useXRay } from './XRayProvider'
 import type { Comment } from '@/lib/schemas'
-
-const STATUS_LABEL: Record<Comment['status'], string> = {
-  queued: 'Queued',
-  moderating: 'Moderating',
-  generating: 'Generating',
-  merged: 'Merged',
-  rejected: 'Rejected',
-  failed: 'Failed',
-}
-
-const STATUS_COLOR: Record<Comment['status'], string> = {
-  queued: 'text-neutral-400',
-  moderating: 'text-yellow-500',
-  generating: 'text-blue-500',
-  merged: 'text-green-500',
-  rejected: 'text-red-400',
-  failed: 'text-orange-500',
-}
 
 const STATUS_DOT: Record<Comment['status'], string> = {
   queued: 'bg-neutral-300',
@@ -32,17 +14,35 @@ const STATUS_DOT: Record<Comment['status'], string> = {
   failed: 'bg-orange-400',
 }
 
+const STATUS_LABEL: Record<Comment['status'], string> = {
+  queued: 'Queued',
+  moderating: 'Moderating',
+  generating: 'Generating',
+  merged: 'Merged',
+  rejected: 'Rejected',
+  failed: 'Failed',
+}
+
 export default function XRaySidebar() {
   const { active, focusedId, comments, activate, deactivate } = useXRay()
-  const sidebarRef = useRef<HTMLDivElement>(null)
+
+  const elements = useMemo(() => {
+    const map = new Map<string, { latest: Comment; count: number }>()
+    for (const c of comments) {
+      const existing = map.get(c.edit_id)
+      if (!existing) {
+        map.set(c.edit_id, { latest: c, count: 1 })
+      } else {
+        existing.count++
+      }
+    }
+    return Array.from(map.values())
+  }, [comments])
 
   if (!active) return null
 
   const sidebar = (
-    <div
-      ref={sidebarRef}
-      className="fixed top-0 right-0 h-full w-80 bg-white border-l border-neutral-200 shadow-xl z-40 flex flex-col"
-    >
+    <div className="fixed top-0 right-0 h-full w-72 bg-white border-l border-neutral-200 shadow-xl z-40 flex flex-col">
       <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100">
         <span className="text-xs font-semibold uppercase tracking-widest text-neutral-400">
           X-Ray
@@ -57,62 +57,37 @@ export default function XRaySidebar() {
       </div>
 
       <div className="flex-1 overflow-y-auto px-5 py-4">
-        {comments.length === 0 ? (
-          <p className="text-xs text-neutral-400 italic">No activity yet.</p>
+        {elements.length === 0 ? (
+          <p className="text-xs text-neutral-400 italic">No editable elements with activity yet.</p>
         ) : (
-          <ol className="space-y-4">
-            {comments.map((c) => (
+          <ol className="space-y-1">
+            {elements.map(({ latest: c, count }) => (
               <li
-                key={c.id}
+                key={c.edit_id}
                 onClick={() => activate(c.edit_id)}
-                className={`flex gap-3 text-sm cursor-pointer rounded-lg p-2 -mx-2 transition-colors ${
-                  focusedId === c.edit_id
-                    ? 'bg-neutral-100'
-                    : 'hover:bg-neutral-50'
+                className={`flex items-center gap-3 rounded-lg px-2 py-2 cursor-pointer transition-colors ${
+                  focusedId === c.edit_id ? 'bg-neutral-100' : 'hover:bg-neutral-50'
                 }`}
               >
-                <div className="mt-1.5 shrink-0">
-                  <span className={`block w-2 h-2 rounded-full ${STATUS_DOT[c.status]}`} />
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-mono text-xs text-neutral-400">{c.edit_id}</span>
-                    {c.resolved_edit_id && c.resolved_edit_id !== c.edit_id && (
-                      <span className="font-mono text-xs text-neutral-400">→ {c.resolved_edit_id}</span>
-                    )}
-                    <span className={`text-xs font-medium ${STATUS_COLOR[c.status]}`}>
-                      {STATUS_LABEL[c.status]}
-                    </span>
-                    {c.pr_url && (
-                      <a
-                        href={c.pr_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="text-xs text-[var(--accent)] hover:underline"
-                      >
-                        PR →
-                      </a>
-                    )}
-                  </div>
-                  <p className="text-neutral-600 text-xs truncate">{c.text}</p>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    {c.user_id && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={`https://avatars.githubusercontent.com/u/${c.user_id}?s=16&v=4`}
-                        alt=""
-                        className="w-4 h-4 rounded-full"
-                      />
-                    )}
-                    <span className="text-[11px] text-neutral-400">
-                      {c.user_name ? `github:${c.user_name}` : 'anonymous'}
-                    </span>
-                  </div>
-                  {c.reasoning && (
-                    <p className="text-xs text-neutral-400 mt-0.5 italic">{c.reasoning}</p>
-                  )}
-                </div>
+                <span className={`w-2 h-2 rounded-full shrink-0 ${STATUS_DOT[c.status]}`} />
+                <span className="font-mono text-xs text-neutral-700 flex-1 truncate">{c.edit_id}</span>
+                <span className="text-[10px] text-neutral-400">{STATUS_LABEL[c.status]}</span>
+                {count > 1 && (
+                  <span className="text-[10px] font-semibold bg-neutral-100 text-neutral-500 px-1.5 py-0.5 rounded-full shrink-0">
+                    {count}
+                  </span>
+                )}
+                {c.pr_url && (
+                  <a
+                    href={c.pr_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-[10px] text-[var(--accent)] hover:underline shrink-0"
+                  >
+                    PR →
+                  </a>
+                )}
               </li>
             ))}
           </ol>
