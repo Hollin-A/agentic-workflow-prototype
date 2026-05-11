@@ -300,6 +300,7 @@ Move the activity feed from inline page content to a floating panel, making the 
   - Feed list: each item shows a circular status badge (✓ / … / · / ! / ×), a styled `edit_id` target tag, the comment text, a layer tag (content / theme / override), the agent reasoning block with left border, and a relative timestamp
   - Closing the panel returns to the ambient pill view
 - Integrate the ambient pill and X-ray button into a shared bottom-right cluster (pill on the left, X-ray button on the right — both always visible in normal and feed views; pill hides in X-ray view)
+- Simplify `XRaySidebar` — strip the full comment feed from the sidebar (it now lives in the activity panel). Sidebar retains: element list with per-element comment counts and status dots, click-to-focus behaviour, and PR links. The full narrative feed (reasoning block, timestamps, attribution) is deferred to the activity panel.
 
 **Checkpoint:**
 - Default view shows a clean site with only the ambient pill cluster visible (no inline feed)
