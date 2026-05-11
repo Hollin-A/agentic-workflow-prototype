@@ -213,13 +213,13 @@ A toggleable overlay that makes the editable surface and pipeline state legible 
 - When active, overlay each `EditableElement` with its `data-edit-id` label and a comment count badge
 - Show a pipeline sidebar listing recent comments with status, routing reasoning, and PR link for each
 - Add deep-link support: `?xray=<edit-id>` opens x-ray mode with that element highlighted on page load
-- Ensure x-ray mode is dismissed by pressing `Escape` or clicking outside the sidebar
+- Ensure x-ray mode is dismissed by pressing `Escape`, clicking the pill button, or the × in the sidebar header (outside-click is intentionally not used — it conflicts with the pill toggle due to native DOM event ordering)
 
 **Checkpoint:**
 - `⌘.` toggles x-ray overlay; all three editable elements show their `data-edit-id` labels
 - Clicking a feed item opens x-ray mode focused on the relevant element
 - Navigating to `?xray=hero.title` opens x-ray mode with hero.title highlighted
-- Pressing `Escape` dismisses x-ray mode
+- `Escape`, pill button, and × button all dismiss x-ray mode
 - No layout shift or console errors when toggling
 
 ---
@@ -239,7 +239,7 @@ Let visitors vote on pending suggestions to influence processing order.
 - Vote on a queued comment → count increments in the feed in real time
 - Vote twice from the same IP → second vote is rejected (409)
 - Two comments queued simultaneously → higher-voted one is processed first
-- Voting on a deployed or rejected comment → returns 400
+- Voting on a merged or rejected comment → returns 400
 
 ---
 
