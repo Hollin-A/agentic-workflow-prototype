@@ -73,9 +73,9 @@ export default function EditableElement({
     >
       {children}
 
-      {/* X-ray label overlay */}
+      {/* X-ray label overlay — must be span so it's valid inside <p> */}
       {xrayActive && (
-        <div
+        <span
           onClick={() => activate(editId)}
           className="absolute -top-5 left-0 flex items-center gap-1.5 cursor-pointer"
         >
@@ -87,7 +87,7 @@ export default function EditableElement({
               {commentCount}
             </span>
           )}
-        </div>
+        </span>
       )}
 
       {/* Comment icon — hidden in x-ray mode */}
