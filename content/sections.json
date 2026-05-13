@@ -1,0 +1,84 @@
+{
+  "sections": [
+    {
+      "id": "main-heading",
+      "type": "heading",
+      "level": 1,
+      "text": "The site that edits itself",
+      "visible": true
+    },
+    {
+      "id": "elevator-pitch",
+      "type": "paragraph",
+      "text": "Every word on this page was suggested by a visitor and applied by an AI agent through a real GitHub pull request. Suggest a change, watch the pipeline run, see the page update.",
+      "visible": true
+    },
+    {
+      "id": "pipeline-steps",
+      "type": "ordered-list",
+      "items": [
+        "Moderation — Claude Haiku checks the suggestion for safety and relevance",
+        "Generation — Claude Sonnet produces a structured patch",
+        "Validation — Zod schemas enforce the patch shape before any commit",
+        "Commit — Octokit opens a pull request against the repository",
+        "Merge — CI runs the allowlist check; if it passes, GitHub auto-merges",
+        "Deploy — Vercel rebuilds; the page updates within 60 seconds"
+      ],
+      "visible": true
+    },
+    {
+      "id": "safety-callout",
+      "type": "callout",
+      "tone": "info",
+      "title": "The agent cannot break the site",
+      "body": "A GitHub Actions workflow blocks any pull request that touches files outside a strict allowlist. The agent can only modify structured data — never application code, never component files.",
+      "visible": true
+    },
+    {
+      "id": "limits-callout",
+      "type": "callout",
+      "tone": "warn",
+      "title": "What the agent cannot do",
+      "body": "The agent cannot invent new section types, write arbitrary HTML, or modify styling. It manipulates structured data that pre-built components know how to render. Constraints are the point.",
+      "visible": true
+    },
+    {
+      "id": "what-structural-means",
+      "type": "paragraph",
+      "text": "Structural edits mean the agent can split one paragraph into three, merge sections, reorder them, add a new callout, or remove a section entirely — not just swap words. The page shape itself is editable.",
+      "visible": true
+    },
+    {
+      "id": "commit-format",
+      "type": "code-block",
+      "language": "bash",
+      "code": "agent(elevator-pitch): rewrite opening paragraph to active voice",
+      "visible": true
+    },
+    {
+      "id": "try-suggestions",
+      "type": "bullet-list",
+      "items": [
+        "\"Split this paragraph into three points\"",
+        "\"Add a section about the kill switch\"",
+        "\"Put the pipeline steps after the callout\"",
+        "\"Make the safety callout a success tone\""
+      ],
+      "visible": true
+    },
+    {
+      "id": "closing-quote",
+      "type": "quote",
+      "text": "The thing is interesting because it's real, not because it claims to be.",
+      "attribution": "docs/system-reference.md",
+      "visible": true
+    },
+    {
+      "id": "see-prs",
+      "type": "link-block",
+      "text": "Every change has a real pull request →",
+      "href": "https://github.com/Hollin-A/agentic-workflow-prototype/pulls",
+      "visible": true
+    }
+  ]
+}
