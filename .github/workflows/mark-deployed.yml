@@ -13,7 +13,7 @@ jobs:
     steps:
       - name: Wait for Vercel deployment
         # Conservative estimate — adjust up if your build regularly takes longer.
-        run: sleep 120
+        run: sleep 60
 
       - name: Call deploy webhook
         # --fail exits non-zero on 4xx/5xx so the step surfaces auth errors clearly.
