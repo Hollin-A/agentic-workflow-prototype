@@ -65,6 +65,53 @@ const QuoteSchema = SectionBaseSchema.extend({
 })
 
 // ---------------------------------------------------------------------------
+// Stat row schema
+// ---------------------------------------------------------------------------
+// A row of 2–6 headline numbers with short labels.
+
+const StatSchema = z.object({
+  value: z.string().min(1).max(20),
+  label: z.string().min(1).max(60),
+})
+
+const StatRowSchema = SectionBaseSchema.extend({
+  type: z.literal('stat-row'),
+  stats: z.array(StatSchema).min(2).max(6),
+})
+
+// ---------------------------------------------------------------------------
+// Tech stack schema
+// ---------------------------------------------------------------------------
+// Named technology chips with a one-liner each.
+
+const TechItemSchema = z.object({
+  name: z.string().min(1).max(40),
+  description: z.string().min(1).max(120),
+  href: z.string().url().optional(),
+})
+
+const TechStackSchema = SectionBaseSchema.extend({
+  type: z.literal('tech-stack'),
+  items: z.array(TechItemSchema).min(1).max(12),
+})
+
+// ---------------------------------------------------------------------------
+// Workflow schema
+// ---------------------------------------------------------------------------
+// Horizontal step-by-step pipeline visualisation.
+// Agent edits step titles and descriptions — renderer handles the layout.
+
+const WorkflowStepSchema = z.object({
+  title: z.string().min(1).max(60),
+  description: z.string().min(1).max(200),
+})
+
+const WorkflowSchema = SectionBaseSchema.extend({
+  type: z.literal('workflow'),
+  steps: z.array(WorkflowStepSchema).min(2).max(8),
+})
+
+// ---------------------------------------------------------------------------
 // Three.js scene schema
 // ---------------------------------------------------------------------------
 // Declarative JSON description of a WebGL scene rendered by React Three Fiber.
@@ -139,6 +186,9 @@ export const SectionSchema = z.discriminatedUnion('type', [
   LinkBlockSchema,
   QuoteSchema,
   ThreeJsSceneSchema,
+  WorkflowSchema,
+  StatRowSchema,
+  TechStackSchema,
 ])
 
 export const SectionsFileSchema = z.object({
@@ -181,6 +231,9 @@ export const UpdateSectionsTool = {
     '- code-block: language, code (max 5000)\n' +
     '- link-block: text (max 200), href (valid URL)\n' +
     '- quote: text (max 500), attribution (max 120)\n' +
+    '- workflow: steps[] (each with title (max 60) and description (max 200), 2–8 steps)\n' +
+    '- stat-row: stats[] (each with value (max 20) and label (max 60), 2–6 stats)\n' +
+    '- tech-stack: items[] (each with name (max 40), description (max 120), optional href URL, 1–12 items)\n' +
     '- threejs-scene: height (px, 100-800), camera {fov, position[x,y,z]}, lights[], objects[]\n' +
     '  Each object: id, geometry {type, params[]}, material {type, color, wireframe, roughness, metalness}, position[x,y,z], scale, animation {rotate[x,y,z], float {amplitude, speed}}\n' +
     '  Geometry types: Box, Sphere, Torus, TorusKnot, Icosahedron, Octahedron, Cone, Cylinder, Dodecahedron, Tetrahedron\n' +
@@ -288,6 +341,9 @@ export type CodeBlockSection = z.infer<typeof CodeBlockSchema>
 export type LinkBlockSection = z.infer<typeof LinkBlockSchema>
 export type QuoteSection = z.infer<typeof QuoteSchema>
 export type ThreeJsSceneSection = z.infer<typeof ThreeJsSceneSchema>
+export type WorkflowSection = z.infer<typeof WorkflowSchema>
+export type StatRowSection = z.infer<typeof StatRowSchema>
+export type TechStackSection = z.infer<typeof TechStackSchema>
 export type ThemeTokens = z.infer<typeof ThemeTokensSchema>
 export type ModerationResult = z.infer<typeof ModerationResultSchema>
 export type Comment = z.infer<typeof CommentSchema>
