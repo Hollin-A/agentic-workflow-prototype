@@ -18,18 +18,19 @@
       "items": [
         "Suggestion received — your submission is rate-limited by IP and saved to the database with a status of \"queued\"",
         "Kill switch check — if the owner has paused the pipeline, your suggestion is stopped here before any AI is called",
-        "Moderation — a fast AI model (Claude Haiku) reads your suggestion and decides if it's safe, unsafe, or off-topic; anything not safe is rejected",
-        "Generation — a more capable AI model (Claude Sonnet) reads the current page content and your suggestion, then produces a structured edit",
-        "Validation — the edit is checked against strict rules; if anything is malformed or out of range, the suggestion is marked failed",
+        "Scope classification — Claude Haiku decides if your suggestion targets the clicked section only, or the whole page; section-scoped suggestions cannot modify other elements",
+        "Moderation — Claude Haiku decides if the suggestion is safe, unsafe, or off-topic; anything not safe is rejected",
+        "Generation — Claude Sonnet reads the current page content and your suggestion, then produces a structured edit targeting the right section",
+        "Validation — the edit is checked against strict schemas; if anything is malformed or out of range, the suggestion is marked failed",
         "Commit — the edit is written to a new branch on GitHub and a pull request is opened automatically",
         "CI check — GitHub Actions checks every file in the pull request against an allowlist; any file outside the allowed paths blocks the merge",
-        "Deploy — once merged, Vercel rebuilds the site and the change reaches visitors within 60 seconds"
+        "Deploy — once merged, Vercel rebuilds the site; a GitHub Actions workflow then calls the deploy webhook, busts the cache, and pushes a live update to every open browser tab"
       ],
       "type": "ordered-list",
       "visible": true
     },
     {
-      "body": "A GitHub Actions workflow blocks any pull request that touches files outside a strict allowlist (content/, theme/, overrides/). The check runs on GitHub's infrastructure, independent of the agent pipeline. Even a malicious or malformed patch cannot reach application code — the CI wall is enforced at the repository level, not inside the AI models.",
+      "body": "A GitHub Actions workflow blocks any pull request that touches files outside a strict allowlist (content/, theme/). The check runs on GitHub's infrastructure, independent of the agent pipeline. Even a malicious or malformed patch cannot reach application code — the CI wall is enforced at the repository level, not inside the AI models.",
       "id": "safety-callout",
       "title": "The agent cannot break the site",
       "tone": "info",
@@ -45,7 +46,7 @@
     },
     {
       "id": "safety-detail-paragraph",
-      "text": "When Octokit opens a PR, GitHub Actions triggers a workflow that calls the GitHub API to fetch the full list of changed file paths in the diff. Each path is matched against the allowlist: content/, theme/, and overrides/. If any single path falls outside those prefixes — whether introduced intentionally or by a malformed patch — the workflow exits with a non-zero code, the CI check fails, and GitHub's branch protection rules prevent auto-merge from proceeding. The Inngest step that enabled auto-merge has no ability to override this: the check runs on GitHub's infrastructure, not inside the agent's execution context.",
+      "text": "When Octokit opens a PR, GitHub Actions triggers a workflow that calls the GitHub API to fetch the full list of changed file paths in the diff. Each path is matched against the allowlist: content/ and theme/. If any single path falls outside those prefixes — whether introduced intentionally or by a malformed patch — the workflow exits with a non-zero code, the CI check fails, and GitHub's branch protection rules prevent auto-merge from proceeding. The Inngest step that enabled auto-merge has no ability to override this: the check runs on GitHub's infrastructure, not inside the agent's execution context.",
       "type": "paragraph",
       "visible": true
     },
@@ -59,7 +60,8 @@
     {
       "id": "safety-layers-list",
       "items": [
-        "Rate limiting — 3 submissions/hour for anonymous users, 20/hour for GitHub-authenticated users, tracked by SHA-256 hashed IP stored in Supabase",
+        "Rate limiting — 20 submissions/hour per GitHub-authenticated user, tracked by SHA-256 hashed IP stored in Supabase",
+        "Scope classification — section-scoped suggestions only modify the clicked element; Claude Haiku explicitly marks all other sections read-only before passing context to Sonnet",
         "AI moderation gate — Claude Haiku screens every suggestion before any Sonnet call; unsafe or off-topic content is rejected at the cheapest step in the pipeline",
         "Zod schema validation — the agent's output is validated against strict schemas before any commit; bad shapes, missing required fields, and out-of-range values are all caught here",
         "Element locking — while a comment is in-flight, its target edit_id is locked; further submissions for the same element return HTTP 409 until the comment resolves",
@@ -94,10 +96,11 @@
     {
       "id": "try-suggestions",
       "items": [
-        "\"Split this paragraph into three points\"",
-        "\"Add a section about the kill switch\"",
-        "\"Put the pipeline steps after the callout\"",
-        "\"Make the safety callout a success tone\""
+        "\"Split the pipeline steps into before and after the PR opens\"",
+        "\"Add a section about what happens when a suggestion is rejected\"",
+        "\"Merge the two safety sections into one\"",
+        "\"Move the callout to just before the pipeline steps\"",
+        "\"Rewrite the opening paragraph for a non-technical audience\""
       ],
       "type": "bullet-list",
       "visible": true

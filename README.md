@@ -1,14 +1,20 @@
-# agentic-workflow-prototype
+# The site that edits itself
 
-A prototype that proves the full agentic loop works end-to-end. Visitors leave comments on elements of a fake product's marketing site. An LLM-driven pipeline interprets each comment, generates a constrained code change, validates it, opens a PR, and redeploys. The crowd collectively shapes the site over time.
+A Next.js site where any visitor can suggest a change to the page content. An AI agent moderates the suggestion, generates a structured patch, opens a real GitHub pull request, and Vercel redeploys. The page updates in front of visitors without a manual refresh. Every change is traceable to a PR.
 
-This repo is the vertical slice — the smallest version of the system that touches every layer. Once this works, scaling up to the full vision is more of the same.
+End-to-end latency: 30–90 seconds.
 
-## What this prototype proves
+## What this proves
 
-A visitor leaves a comment on an element → the system moderates it → generates a structured patch via LLM → opens a PR → CI validates → PR auto-merges → Vercel redeploys → the activity feed updates in real time.
+The pipeline is not a database with a chatbot in front of it. It performs real structural edits:
 
-If that loop works end-to-end, every architectural assumption is validated.
+- Splitting one paragraph into three sections
+- Reordering sections
+- Adding or removing a callout
+- Changing a section's type (paragraph → callout, list → code block)
+- Rewriting text in a different tone or voice
+
+Every change has a real GitHub PR. CI runs on every agent PR and blocks merges that touch files outside the permitted set. The agent literally cannot modify application code.
 
 ## Tech stack
 
@@ -16,9 +22,10 @@ If that loop works end-to-end, every architectural assumption is validated.
 |---|---|
 | Frontend | Next.js (App Router), TypeScript, Tailwind CSS |
 | Schema & validation | Zod |
-| Database + auth + realtime | Supabase |
+| Database + realtime | Supabase |
+| Authentication | Auth.js with GitHub OAuth |
 | Workflow orchestration | Inngest |
-| LLM | Anthropic API (Haiku for moderation, Sonnet for generation) |
+| LLM | Anthropic API (Haiku for moderation + scope classification, Sonnet for generation) |
 | Repo automation | Octokit (GitHub API) |
 | Hosting | Vercel |
 
@@ -30,7 +37,7 @@ You need two terminals.
 # Terminal 1 — Next.js dev server
 npm run dev
 
-# Terminal 2 — Inngest dev server (required for workflows to fire)
+# Terminal 2 — Inngest dev server (workflows won't fire without this)
 npx inngest-cli@latest dev
 ```
 
@@ -38,11 +45,15 @@ Visit `http://localhost:3000`. The Inngest trace UI runs at `http://localhost:82
 
 ## Environment variables
 
-Copy `.env.example` to `.env.local` and fill in the values. The same variables need to be set in Vercel project settings for production.
+Copy `.env.example` to `.env.local` and fill in the values.
+
+The same variables (except `ALLOW_ANONYMOUS`) must be set in Vercel project settings for production.
+
+For the deploy webhook to work in production, two GitHub repository secrets are also required — see `docs/architecture.md`.
 
 ## Docs
 
-- [`docs/vision.md`](docs/vision.md) — what this project is and where it's going
-- [`docs/architecture.md`](docs/architecture.md) — system design and data flow
-- [`docs/roadmap.md`](docs/roadmap.md) — what's in v0, what's deferred to v1
+- [`docs/architecture.md`](docs/architecture.md) — system design, pipeline, safety model
+- [`docs/system-reference.md`](docs/system-reference.md) — agent ground truth, injected into every generate-patch prompt
+- [`docs/roadmap.md`](docs/roadmap.md) — what shipped in v0, v1, and v2; what's deferred
 - [`docs/decisions/`](docs/decisions/) — architecture decision records
