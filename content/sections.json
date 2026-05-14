@@ -113,25 +113,93 @@
             0
           ],
           "scale": 1
+        },
+        {
+          "animation": {
+            "float": {
+              "amplitude": 0.08,
+              "speed": 1.6
+            },
+            "rotate": [
+              0.004,
+              0.002,
+              0.006
+            ]
+          },
+          "geometry": {
+            "params": [
+              0.28,
+              32,
+              32
+            ],
+            "type": "Sphere"
+          },
+          "id": "orbiting-sphere",
+          "material": {
+            "color": "#00EFFF",
+            "metalness": 0.7,
+            "roughness": 0.1,
+            "type": "MeshPhysicalMaterial"
+          },
+          "position": [
+            2.2,
+            0.4,
+            0
+          ],
+          "scale": 1
         }
       ],
       "type": "threejs-scene",
       "visible": true
     },
     {
-      "id": "pipeline-steps",
-      "items": [
-        "Suggestion received — your submission is rate-limited by IP and saved to the database with a status of \"queued\"",
-        "Kill switch check — if the owner has paused the pipeline, your suggestion is stopped here before any AI is called",
-        "Scope classification — Claude Haiku decides if your suggestion targets the clicked section only, or the whole page; section-scoped suggestions cannot modify other elements",
-        "Moderation — Claude Haiku decides if the suggestion is safe, unsafe, or off-topic; anything not safe is rejected",
-        "Generation — Claude Sonnet reads the current page content and your suggestion, then produces a structured edit targeting the right section",
-        "Validation — the edit is checked against strict schemas; if anything is malformed or out of range, the suggestion is marked failed",
-        "Commit — the edit is written to a new branch on GitHub and a pull request is opened automatically",
-        "CI check — GitHub Actions checks every file in the pull request against an allowlist; any file outside the allowed paths blocks the merge",
-        "Deploy — once merged, Vercel rebuilds the site; a GitHub Actions workflow then calls the deploy webhook, busts the cache, and pushes a live update to every open browser tab"
+      "id": "pipeline-stats",
+      "stats": [
+        {
+          "label": "suggestion to live deploy",
+          "value": "30–90s"
+        },
+        {
+          "label": "AI models in the pipeline",
+          "value": "2"
+        },
+        {
+          "label": "humans in the loop",
+          "value": "0"
+        },
+        {
+          "label": "changes have a real GitHub PR",
+          "value": "100%"
+        }
       ],
-      "type": "ordered-list",
+      "type": "stat-row",
+      "visible": true
+    },
+    {
+      "id": "pipeline-workflow",
+      "steps": [
+        {
+          "description": "Rate-limited by IP and saved as queued — no AI called yet",
+          "title": "Receive"
+        },
+        {
+          "description": "Kill switch, scope classification, and moderation — three sequential Haiku checks before any Sonnet spend",
+          "title": "Gate"
+        },
+        {
+          "description": "Sonnet reads current page content and your suggestion, then calls update_sections or update_theme",
+          "title": "Generate"
+        },
+        {
+          "description": "Output validated against Zod schemas, then written to a new branch and a pull request opened",
+          "title": "Commit"
+        },
+        {
+          "description": "CI verifies only allowlisted files changed, PR auto-merges, Vercel rebuilds, live push to all open tabs",
+          "title": "Ship"
+        }
+      ],
+      "type": "workflow",
       "visible": true
     },
     {
@@ -140,19 +208,6 @@
       "title": "The agent cannot break the site",
       "tone": "info",
       "type": "callout",
-      "visible": true
-    },
-    {
-      "id": "safety-detail-heading",
-      "level": 3,
-      "text": "How the CI allowlist check actually works",
-      "type": "heading",
-      "visible": true
-    },
-    {
-      "id": "safety-detail-paragraph",
-      "text": "When Octokit opens a PR, GitHub Actions triggers a workflow that calls the GitHub API to fetch the full list of changed file paths in the diff. Each path is matched against the allowlist: content/ and theme/. If any single path falls outside those prefixes — whether introduced intentionally or by a malformed patch — the workflow exits with a non-zero code, the CI check fails, and GitHub's branch protection rules prevent auto-merge from proceeding. The Inngest step that enabled auto-merge has no ability to override this: the check runs on GitHub's infrastructure, not inside the agent's execution context.",
-      "type": "paragraph",
       "visible": true
     },
     {
@@ -165,37 +220,71 @@
     {
       "id": "safety-layers-list",
       "items": [
-        "Rate limiting — 20 submissions/hour per GitHub-authenticated user, tracked by SHA-256 hashed IP stored in Supabase",
-        "Scope classification — section-scoped suggestions only modify the clicked element; Claude Haiku explicitly marks all other sections read-only before passing context to Sonnet",
-        "AI moderation gate — Claude Haiku screens every suggestion before any Sonnet call; unsafe or off-topic content is rejected at the cheapest step in the pipeline",
         "Zod schema validation — the agent's output is validated against strict schemas before any commit; bad shapes, missing required fields, and out-of-range values are all caught here",
-        "Element locking — while a comment is in-flight, its target edit_id is locked; further submissions for the same element return HTTP 409 until the comment resolves",
-        "Kill switch — reads the kill_switch row in the settings table; if active, the Inngest function halts before making any Anthropic API call",
-        "Anthropic spend cap — a hard monthly limit configured in the Anthropic console; when reached, the API returns errors and the pipeline marks comments failed",
-        "Held-comment queue — low-confidence outputs or sensitive edits are held for owner review; on approval, the patch is re-generated against current file state to avoid stale-patch merge conflicts"
+        "Element locking — while a suggestion is in-flight, its target is locked; further submissions for the same element return HTTP 409 until the pipeline resolves",
+        "Kill switch — a single setting in the database halts the pipeline before any AI call; no redeploy needed",
+        "Anthropic spend cap — a hard monthly limit in the Anthropic console; when reached, the API returns errors and the pipeline marks suggestions failed",
+        "Held-comment queue — low-confidence or sensitive outputs are held for owner review; on approval, the patch is re-generated against current file state"
       ],
       "type": "bullet-list",
       "visible": true
     },
     {
-      "body": "The agent cannot invent new section types, write arbitrary HTML, or modify styling beyond the token schema. It calls update_sections with typed structured data that pre-registered renderer components know how to render. The renderer registry is hardcoded in application code — outside the agent's write scope entirely.",
-      "id": "limits-callout",
-      "title": "What the agent cannot do",
+      "body": "The agent can rewrite text, split or merge sections, reorder the page, add new typed sections, or hide existing ones — all by editing a JSON array. It cannot write arbitrary HTML, invent new section types, or touch application code. Its output is validated against strict Zod schemas before any commit, and only content/ and theme/ files are ever in scope.",
+      "id": "agent-scope",
+      "title": "What the agent can and cannot do",
       "tone": "warn",
       "type": "callout",
       "visible": true
     },
     {
-      "id": "what-structural-means",
-      "text": "Structural edits are not limited to text substitution. The agent can split one section into multiple nodes, merge adjacent sections, reorder the sections array, insert a new typed section, change a section's type field (e.g. paragraph → callout), or set visible: false to hide a section — all by manipulating the JSON array that the renderer consumes.",
-      "type": "paragraph",
+      "id": "tech-stack",
+      "items": [
+        {
+          "description": "App framework — pages, API routes, and ISR cache",
+          "href": "https://nextjs.org",
+          "name": "Next.js"
+        },
+        {
+          "description": "Claude Haiku moderates; Claude Sonnet generates the patch",
+          "href": "https://anthropic.com",
+          "name": "Anthropic"
+        },
+        {
+          "description": "Durable multi-step pipeline with retries and a hold queue",
+          "href": "https://inngest.com",
+          "name": "Inngest"
+        },
+        {
+          "description": "Stores suggestions, settings, and streams real-time status",
+          "href": "https://supabase.com",
+          "name": "Supabase"
+        },
+        {
+          "description": "CI allowlist check and deploy webhook on every merge",
+          "href": "https://github.com/features/actions",
+          "name": "GitHub Actions"
+        },
+        {
+          "description": "Hosts the site and rebuilds on every merged PR",
+          "href": "https://vercel.com",
+          "name": "Vercel"
+        }
+      ],
+      "type": "tech-stack",
       "visible": true
     },
     {
-      "code": "agent(elevator-pitch): rewrite opening paragraph to active voice",
-      "id": "commit-format",
-      "language": "bash",
-      "type": "code-block",
+      "id": "try-heading",
+      "level": 2,
+      "text": "Try it yourself",
+      "type": "heading",
+      "visible": true
+    },
+    {
+      "id": "how-to-use",
+      "text": "Hover any element on this page — a small icon appears in the corner. Click it, type a suggestion in plain English, and submit. The pipeline runs in the background; the page updates itself when the deploy lands.",
+      "type": "paragraph",
       "visible": true
     },
     {
@@ -208,6 +297,19 @@
         "\"Rewrite the opening paragraph for a non-technical audience\""
       ],
       "type": "bullet-list",
+      "visible": true
+    },
+    {
+      "id": "commit-context",
+      "text": "Every agent-opened pull request follows a consistent commit format so agent changes are easy to spot in the git history:",
+      "type": "paragraph",
+      "visible": true
+    },
+    {
+      "code": "agent(elevator-pitch): rewrite opening paragraph to active voice",
+      "id": "commit-format",
+      "language": "bash",
+      "type": "code-block",
       "visible": true
     },
     {
