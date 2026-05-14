@@ -16,7 +16,11 @@
     {
       "camera": {
         "fov": 60,
-        "position": [0, 0, 4]
+        "position": [
+          0,
+          0,
+          4
+        ]
       },
       "height": 420,
       "id": "hero-scene",
@@ -28,62 +32,86 @@
         {
           "color": "#ffffff",
           "intensity": 3,
-          "position": [5, 5, 5],
+          "position": [
+            5,
+            5,
+            5
+          ],
           "type": "PointLight"
         },
         {
           "color": "#a5b4fc",
           "intensity": 3,
-          "position": [-5, -3, -3],
+          "position": [
+            -5,
+            -3,
+            -3
+          ],
           "type": "PointLight"
         }
       ],
       "objects": [
         {
           "animation": {
-            "float": { "amplitude": 0.12, "speed": 0.8 },
-            "rotate": [0.002, 0.006, 0.001]
+            "float": {
+              "amplitude": 0.12,
+              "speed": 0.8
+            },
+            "rotate": [
+              0.002,
+              0.006,
+              0.001
+            ]
           },
-          "geometry": { "params": [1.4], "type": "Octahedron" },
+          "geometry": {
+            "params": [
+              1.4
+            ],
+            "type": "Dodecahedron"
+          },
           "id": "main-diamond",
           "material": {
-            "color": "#39FF14",
+            "color": "#00EFFF",
             "metalness": 0.6,
             "roughness": 0.05,
             "type": "MeshPhysicalMaterial"
           },
-          "position": [0, 0, 0],
+          "position": [
+            0,
+            0,
+            0
+          ],
           "scale": 1
         },
         {
           "animation": {
-            "float": { "amplitude": 0.12, "speed": 0.8 },
-            "rotate": [0.002, 0.006, 0.001]
+            "float": {
+              "amplitude": 0.12,
+              "speed": 0.8
+            },
+            "rotate": [
+              0.002,
+              0.006,
+              0.001
+            ]
           },
-          "geometry": { "params": [1.4], "type": "Octahedron" },
+          "geometry": {
+            "params": [
+              1.4
+            ],
+            "type": "Dodecahedron"
+          },
           "id": "main-diamond-wireframe",
           "material": {
             "color": "#ffffff",
             "type": "MeshBasicMaterial",
             "wireframe": true
           },
-          "position": [0, 0, 0],
-          "scale": 1
-        },
-        {
-          "animation": {
-            "float": { "amplitude": 0.08, "speed": 1.6 },
-            "rotate": [0.004, 0.002, 0.006]
-          },
-          "geometry": { "params": [0.28, 32, 32], "type": "Sphere" },
-          "id": "orbiting-sphere",
-          "material": {
-            "color": "#00EFFF",
-            "metalness": 0.7,
-            "roughness": 0.1,
-            "type": "MeshPhysicalMaterial"
-          },
-          "position": [2.2, 0.4, 0],
+          "position": [
+            0,
+            0,
+            0
+          ],
           "scale": 1
         }
       ],
@@ -92,41 +120,53 @@
     },
     {
       "id": "pipeline-stats",
-      "type": "stat-row",
-      "visible": true,
       "stats": [
-        { "value": "30–90s", "label": "suggestion to live deploy" },
-        { "value": "2", "label": "AI models in the pipeline" },
-        { "value": "0", "label": "humans in the loop" },
-        { "value": "100%", "label": "changes have a real GitHub PR" }
-      ]
+        {
+          "label": "suggestion to live deploy",
+          "value": "30–90s"
+        },
+        {
+          "label": "AI models in the pipeline",
+          "value": "2"
+        },
+        {
+          "label": "humans in the loop",
+          "value": "0"
+        },
+        {
+          "label": "changes have a real GitHub PR",
+          "value": "100%"
+        }
+      ],
+      "type": "stat-row",
+      "visible": true
     },
     {
       "id": "pipeline-workflow",
-      "type": "workflow",
-      "visible": true,
       "steps": [
         {
-          "title": "Receive",
-          "description": "Rate-limited by IP and saved as queued — no AI called yet"
+          "description": "Rate-limited by IP and saved as queued — no AI called yet",
+          "title": "Receive"
         },
         {
-          "title": "Gate",
-          "description": "Kill switch, scope classification, and moderation — three sequential Haiku checks before any Sonnet spend"
+          "description": "Kill switch, scope classification, and moderation — three sequential Haiku checks before any Sonnet spend",
+          "title": "Gate"
         },
         {
-          "title": "Generate",
-          "description": "Sonnet reads current page content and your suggestion, then calls update_sections or update_theme"
+          "description": "Sonnet reads current page content and your suggestion, then calls update_sections or update_theme",
+          "title": "Generate"
         },
         {
-          "title": "Commit",
-          "description": "Output validated against Zod schemas, then written to a new branch and a pull request opened"
+          "description": "Output validated against Zod schemas, then written to a new branch and a pull request opened",
+          "title": "Commit"
         },
         {
-          "title": "Ship",
-          "description": "CI verifies only allowlisted files changed, PR auto-merges, Vercel rebuilds, live push to all open tabs"
+          "description": "CI verifies only allowlisted files changed, PR auto-merges, Vercel rebuilds, live push to all open tabs",
+          "title": "Ship"
         }
-      ]
+      ],
+      "type": "workflow",
+      "visible": true
     },
     {
       "body": "A GitHub Actions workflow blocks any pull request that touches files outside a strict allowlist (content/, theme/). The check runs on GitHub's infrastructure, independent of the agent pipeline. Even a malicious or malformed patch cannot reach application code — the CI wall is enforced at the repository level, not inside the AI models.",
@@ -165,40 +205,40 @@
     },
     {
       "id": "tech-stack",
-      "type": "tech-stack",
-      "visible": true,
       "items": [
         {
-          "name": "Next.js",
           "description": "App framework — pages, API routes, and ISR cache",
-          "href": "https://nextjs.org"
+          "href": "https://nextjs.org",
+          "name": "Next.js"
         },
         {
-          "name": "Anthropic",
           "description": "Claude Haiku moderates; Claude Sonnet generates the patch",
-          "href": "https://anthropic.com"
+          "href": "https://anthropic.com",
+          "name": "Anthropic"
         },
         {
-          "name": "Inngest",
           "description": "Durable multi-step pipeline with retries and a hold queue",
-          "href": "https://inngest.com"
+          "href": "https://inngest.com",
+          "name": "Inngest"
         },
         {
-          "name": "Supabase",
           "description": "Stores suggestions, settings, and streams real-time status",
-          "href": "https://supabase.com"
+          "href": "https://supabase.com",
+          "name": "Supabase"
         },
         {
-          "name": "GitHub Actions",
           "description": "CI allowlist check and deploy webhook on every merge",
-          "href": "https://github.com/features/actions"
+          "href": "https://github.com/features/actions",
+          "name": "GitHub Actions"
         },
         {
-          "name": "Vercel",
           "description": "Hosts the site and rebuilds on every merged PR",
-          "href": "https://vercel.com"
+          "href": "https://vercel.com",
+          "name": "Vercel"
         }
-      ]
+      ],
+      "type": "tech-stack",
+      "visible": true
     },
     {
       "id": "try-heading",
