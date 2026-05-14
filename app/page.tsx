@@ -14,56 +14,90 @@ export default function Page() {
   const { sections } = readJson<SectionsFile>('content/sections.json')
   const tokens = readJson<ThemeTokens>('theme/tokens.json')
 
+  const visible = sections.filter(s => s.visible)
+
+  // Hoist the first h1 + its immediately following paragraph into the hero zone.
+  // Everything else falls into the body column.
+  const firstSection = visible[0]
+  const isHeroHeading = firstSection?.type === 'heading' && firstSection.level === 1
+  const secondSection = visible[1]
+  const isHeroParagraph = isHeroHeading && secondSection?.type === 'paragraph'
+
+  const heroHeading = isHeroHeading ? firstSection : null
+  const heroParagraph = isHeroParagraph ? secondSection : null
+  const bodySections = visible.slice(isHeroHeading ? (isHeroParagraph ? 2 : 1) : 0)
+
   return (
     <>
       <style>{`:root { --accent: ${tokens.accent}; }`}</style>
 
-      {/* Background glow orbs — fixed, behind everything */}
+      {/* Background glow orbs */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden" aria-hidden>
         <div
-          className="absolute -top-40 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full blur-[120px] opacity-[0.07]"
+          className="absolute -top-40 left-1/2 -translate-x-1/2 w-[800px] h-[800px] rounded-full blur-[140px] opacity-[0.11]"
           style={{ background: tokens.accent }}
         />
-        <div className="absolute top-1/3 -right-32 w-[400px] h-[400px] rounded-full blur-[100px] opacity-[0.04] bg-violet-500" />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[400px] rounded-full blur-[120px] opacity-[0.03] bg-cyan-500" />
+        <div className="absolute top-1/3 -right-32 w-[400px] h-[400px] rounded-full blur-[100px] opacity-[0.06] bg-violet-500" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[400px] rounded-full blur-[120px] opacity-[0.04] bg-cyan-500" />
       </div>
 
-      <main className="relative min-h-screen px-6 sm:px-8">
-        <div className="max-w-2xl mx-auto py-20 sm:py-28 space-y-12">
+      <div className="relative min-h-screen flex flex-col">
 
-          {/* Nav bar */}
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-xs font-mono text-white/30 tracking-widest uppercase">
-              agent / edit
-            </span>
-            {/* Theme accent swatch — editable */}
-            <EditableElement editId="theme.accent" tag="div" className="flex items-center gap-2 cursor-pointer">
-              <div
-                className="w-3 h-3 rounded-full"
-                style={{ background: tokens.accent, boxShadow: `0 0 8px ${tokens.accent}60` }}
-              />
-              <span className="text-xs text-white/30 font-mono">{tokens.accent}</span>
+        {/* ── Nav ── */}
+        <header className="w-full px-8 py-4 flex items-center justify-between border-b border-white/[0.06]">
+          <span className="text-xs font-mono text-white/30 tracking-widest uppercase">
+            agent / edit
+          </span>
+          <EditableElement editId="theme.accent" tag="div" className="flex items-center gap-2">
+            <div
+              className="w-2.5 h-2.5 rounded-full"
+              style={{ background: tokens.accent, boxShadow: `0 0 10px ${tokens.accent}80` }}
+            />
+            <span className="text-xs text-white/25 font-mono">{tokens.accent}</span>
+          </EditableElement>
+        </header>
+
+        {/* ── Hero ── */}
+        {heroHeading && (
+          <section className="w-full px-6 sm:px-12 pt-28 pb-24 border-b border-white/[0.06] flex flex-col items-center text-center">
+            <EditableElement editId={`section.${heroHeading.id}`} tag="div" className="w-full max-w-4xl">
+              <h1 className="text-5xl sm:text-6xl lg:text-[4.5rem] font-bold tracking-tight text-white leading-[1.08] mb-6">
+                {heroHeading.text}
+              </h1>
             </EditableElement>
-          </div>
 
-          {/* Sections loop */}
-          {sections
-            .filter(s => s.visible)
-            .map(section => {
-              const Renderer = SECTION_RENDERERS[section.type]
-              return (
-                <EditableElement
-                  key={section.id}
-                  editId={`section.${section.id}`}
-                  tag="div"
-                >
-                  <Renderer {...section} />
-                </EditableElement>
-              )
-            })}
+            {heroParagraph && (
+              <EditableElement editId={`section.${heroParagraph.id}`} tag="div" className="max-w-xl">
+                <p className="text-lg sm:text-xl text-white/45 leading-relaxed">
+                  {heroParagraph.text}
+                </p>
+              </EditableElement>
+            )}
 
-        </div>
-      </main>
+            {/* Suggest hint */}
+            <p className="mt-10 text-xs text-white/20 font-mono">
+              hover any element to suggest a change
+            </p>
+          </section>
+        )}
+
+        {/* ── Body ── */}
+        <main className="flex-1 w-full max-w-2xl mx-auto px-6 sm:px-8 py-20 space-y-12">
+          {bodySections.map(section => {
+            const Renderer = SECTION_RENDERERS[section.type]
+            return (
+              <EditableElement
+                key={section.id}
+                editId={`section.${section.id}`}
+                tag="div"
+              >
+                <Renderer {...section} />
+              </EditableElement>
+            )
+          })}
+        </main>
+
+      </div>
     </>
   )
 }
