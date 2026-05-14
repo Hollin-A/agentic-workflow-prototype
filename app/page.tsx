@@ -97,7 +97,7 @@ export default function Page() {
         )}
 
         {/* ── Body ── */}
-        <main className="flex-1 w-full max-w-2xl mx-auto px-6 sm:px-8 py-20 space-y-12">
+        <main className="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-20 space-y-12">
           {bodySections.map(section => {
             const Renderer = SECTION_RENDERERS[section.type]
             return (

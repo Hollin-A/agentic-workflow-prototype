@@ -8,6 +8,7 @@ import CodeBlockSection from './CodeBlockSection'
 import LinkBlockSection from './LinkBlockSection'
 import QuoteSection from './QuoteSection'
 import ThreeJsSection from './ThreeJsSection'
+import WorkflowSection from './WorkflowSection'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const SECTION_RENDERERS: Record<Section['type'], React.ComponentType<any>> = {
@@ -20,4 +21,5 @@ export const SECTION_RENDERERS: Record<Section['type'], React.ComponentType<any>
   'link-block': LinkBlockSection,
   quote: QuoteSection,
   'threejs-scene': ThreeJsSection,
+  workflow: WorkflowSection,
 }

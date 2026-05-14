@@ -65,6 +65,22 @@ const QuoteSchema = SectionBaseSchema.extend({
 })
 
 // ---------------------------------------------------------------------------
+// Workflow schema
+// ---------------------------------------------------------------------------
+// Horizontal step-by-step pipeline visualisation.
+// Agent edits step titles and descriptions — renderer handles the layout.
+
+const WorkflowStepSchema = z.object({
+  title: z.string().min(1).max(60),
+  description: z.string().min(1).max(200),
+})
+
+const WorkflowSchema = SectionBaseSchema.extend({
+  type: z.literal('workflow'),
+  steps: z.array(WorkflowStepSchema).min(2).max(8),
+})
+
+// ---------------------------------------------------------------------------
 // Three.js scene schema
 // ---------------------------------------------------------------------------
 // Declarative JSON description of a WebGL scene rendered by React Three Fiber.
@@ -139,6 +155,7 @@ export const SectionSchema = z.discriminatedUnion('type', [
   LinkBlockSchema,
   QuoteSchema,
   ThreeJsSceneSchema,
+  WorkflowSchema,
 ])
 
 export const SectionsFileSchema = z.object({
@@ -181,6 +198,7 @@ export const UpdateSectionsTool = {
     '- code-block: language, code (max 5000)\n' +
     '- link-block: text (max 200), href (valid URL)\n' +
     '- quote: text (max 500), attribution (max 120)\n' +
+    '- workflow: steps[] (each with title (max 60) and description (max 200), 2–8 steps)\n' +
     '- threejs-scene: height (px, 100-800), camera {fov, position[x,y,z]}, lights[], objects[]\n' +
     '  Each object: id, geometry {type, params[]}, material {type, color, wireframe, roughness, metalness}, position[x,y,z], scale, animation {rotate[x,y,z], float {amplitude, speed}}\n' +
     '  Geometry types: Box, Sphere, Torus, TorusKnot, Icosahedron, Octahedron, Cone, Cylinder, Dodecahedron, Tetrahedron\n' +
@@ -288,6 +306,7 @@ export type CodeBlockSection = z.infer<typeof CodeBlockSchema>
 export type LinkBlockSection = z.infer<typeof LinkBlockSchema>
 export type QuoteSection = z.infer<typeof QuoteSchema>
 export type ThreeJsSceneSection = z.infer<typeof ThreeJsSceneSchema>
+export type WorkflowSection = z.infer<typeof WorkflowSchema>
 export type ThemeTokens = z.infer<typeof ThemeTokensSchema>
 export type ModerationResult = z.infer<typeof ModerationResultSchema>
 export type Comment = z.infer<typeof CommentSchema>

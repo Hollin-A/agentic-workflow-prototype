@@ -123,20 +123,31 @@
       "visible": true
     },
     {
-      "id": "pipeline-steps",
-      "items": [
-        "Suggestion received — your submission is rate-limited by IP and saved to the database with a status of \"queued\"",
-        "Kill switch check — if the owner has paused the pipeline, your suggestion is stopped here before any AI is called",
-        "Scope classification — Claude Haiku decides if your suggestion targets the clicked section only, or the whole page; section-scoped suggestions cannot modify other elements",
-        "Moderation — Claude Haiku decides if the suggestion is safe, unsafe, or off-topic; anything not safe is rejected",
-        "Generation — Claude Sonnet reads the current page content and your suggestion, then produces a structured edit targeting the right section",
-        "Validation — the edit is checked against strict schemas; if anything is malformed or out of range, the suggestion is marked failed",
-        "Commit — the edit is written to a new branch on GitHub and a pull request is opened automatically",
-        "CI check — GitHub Actions checks every file in the pull request against an allowlist; any file outside the allowed paths blocks the merge",
-        "Deploy — once merged, Vercel rebuilds the site; a GitHub Actions workflow then calls the deploy webhook, busts the cache, and pushes a live update to every open browser tab"
-      ],
-      "type": "ordered-list",
-      "visible": true
+      "id": "pipeline-workflow",
+      "type": "workflow",
+      "visible": true,
+      "steps": [
+        {
+          "title": "Receive",
+          "description": "Rate-limited by IP and saved as queued — no AI called yet"
+        },
+        {
+          "title": "Gate",
+          "description": "Kill switch, scope classification, and moderation — three sequential Haiku checks before any Sonnet spend"
+        },
+        {
+          "title": "Generate",
+          "description": "Sonnet reads current page content and your suggestion, then calls update_sections or update_theme"
+        },
+        {
+          "title": "Commit",
+          "description": "Output validated against Zod schemas, then written to a new branch and a pull request opened"
+        },
+        {
+          "title": "Ship",
+          "description": "CI verifies only allowlisted files changed, PR auto-merges, Vercel rebuilds, live push to all open tabs"
+        }
+      ]
     },
     {
       "body": "A GitHub Actions workflow blocks any pull request that touches files outside a strict allowlist (content/, theme/). The check runs on GitHub's infrastructure, independent of the agent pipeline. Even a malicious or malformed patch cannot reach application code — the CI wall is enforced at the repository level, not inside the AI models.",
