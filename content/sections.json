@@ -260,7 +260,12 @@
         "\"Add a section about what happens when a suggestion is rejected\"",
         "\"Merge the two safety sections into one\"",
         "\"Move the callout to just before the pipeline steps\"",
-        "\"Rewrite the opening paragraph for a non-technical audience\""
+        "\"Rewrite the opening paragraph for a non-technical audience\"",
+        "\"Change the 3D shape from a Dodecahedron to a TorusKnot\"",
+        "\"Make the 3D object spin faster and float higher\"",
+        "\"Change the 3D object's color to a deep purple\"",
+        "\"Add a second orbiting object to the 3D scene\"",
+        "\"Switch the 3D object's material to MeshNormalMaterial\""
       ],
       "type": "bullet-list",
       "visible": true
