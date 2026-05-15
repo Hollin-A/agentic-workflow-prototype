@@ -14,7 +14,7 @@ export default function XRayPill() {
   ).length
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2">
+    <div className="hidden sm:flex fixed bottom-6 right-6 z-50 items-center gap-2">
       {/* Activity pill — hidden while X-ray is active */}
       {!active && (
         <button
