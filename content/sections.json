@@ -108,7 +108,7 @@
           },
           "id": "main-diamond-edges",
           "material": {
-            "color": "#000000",
+            "color": "#000",
             "type": "MeshBasicMaterial",
             "wireframe": true
           },
@@ -118,38 +118,6 @@
             0
           ],
           "scale": 1.01
-        },
-        {
-          "animation": {
-            "float": {
-              "amplitude": 0.12,
-              "speed": 0.8
-            },
-            "rotate": [
-              0.002,
-              0.006,
-              0.001
-            ]
-          },
-          "geometry": {
-            "params": [
-              1.4
-            ],
-            "type": "Dodecahedron"
-          },
-          "id": "main-diamond-emboss",
-          "material": {
-            "color": "#e0f7ff",
-            "metalness": 1,
-            "roughness": 0,
-            "type": "MeshPhysicalMaterial"
-          },
-          "position": [
-            0,
-            0,
-            0
-          ],
-          "scale": 1.025
         }
       ],
       "type": "threejs-scene",
