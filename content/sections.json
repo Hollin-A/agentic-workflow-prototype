@@ -68,10 +68,7 @@
             ]
           },
           "geometry": {
-            "params": [
-              1.4
-            ],
-            "type": "Dodecahedron"
+            "type": "LightningBolt"
           },
           "id": "main-diamond",
           "material": {
@@ -100,24 +97,22 @@
             ]
           },
           "geometry": {
-            "params": [
-              1.4,
-              0
-            ],
-            "type": "Dodecahedron"
+            "type": "LightningBolt"
           },
           "id": "main-diamond-edges",
           "material": {
-            "color": "#ffffff",
+            "color": "#00EFFF",
+            "opacity": 0.15,
+            "transparent": true,
             "type": "MeshBasicMaterial",
-            "wireframe": false
+            "wireframe": true
           },
           "position": [
             0,
             0,
             0
           ],
-          "scale": 1.002
+          "scale": 1.04
         }
       ],
       "type": "threejs-scene",
