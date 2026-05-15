@@ -5,27 +5,20 @@ import { Canvas, useFrame } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
 import type { ThreeJsSceneSection } from '@/lib/schemas'
+import { useAccent } from '@/components/AccentProvider'
 
 type ObjectConfig = ThreeJsSceneSection['objects'][number]
 type LightConfig = ThreeJsSceneSection['lights'][number]
 
-// Resolve the special "accent" sentinel to the live CSS variable value.
-// Falls back to a safe cyan if the variable isn't available yet.
-function resolveColor(color: string | undefined): string {
-  if (!color || color === 'accent') {
-    if (typeof document !== 'undefined') {
-      return getComputedStyle(document.documentElement)
-        .getPropertyValue('--accent')
-        .trim() || '#00EFFF'
-    }
-    return '#00EFFF'
-  }
-  return color
-}
-
 function SceneMesh({ object }: { object: ObjectConfig }) {
+  const accent = useAccent()
   const meshRef = useRef<THREE.Mesh>(null)
   const baseY = object.position?.[1] ?? 0
+
+  function resolveColor(color: string | undefined): string {
+    if (!color || color === 'accent') return accent
+    return color
+  }
 
   useFrame((state, delta) => {
     if (!meshRef.current) return
