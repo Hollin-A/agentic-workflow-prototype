@@ -251,7 +251,7 @@
     },
     {
       "animation": {
-        "preset": "slide-left",
+        "preset": "fade-up",
         "duration": 0.55
       },
       "body": "A GitHub Actions workflow checks every agent pull request against a strict allowlist. Only content/ and theme/ files can be touched — no application code, no config files. The check runs on GitHub's infrastructure, independent of the AI pipeline.",
