@@ -158,11 +158,11 @@
       "id": "pipeline-workflow",
       "steps": [
         {
-          "description": "Rate-limited by IP and saved as queued — no AI called yet",
+          "description": "GitHub auth verified, honeypot checked, saved as queued — no AI called yet",
           "title": "Receive"
         },
         {
-          "description": "Kill switch, scope classification, and moderation — three sequential Haiku checks before any Sonnet spend",
+          "description": "Kill switch check (DB read), then moderation and scope classification — two sequential Haiku calls before any Sonnet spend",
           "title": "Gate"
         },
         {
@@ -254,7 +254,7 @@
         "duration": 0.55,
         "preset": "fade-up"
       },
-      "body": "A GitHub Actions workflow checks every agent pull request against a strict allowlist. Only content/ and theme/ files can be touched — no application code, no config files. The check runs on GitHub's infrastructure, independent of the AI pipeline.",
+      "body": "A GitHub Actions workflow checks every agent pull request against an exact allowlist: only content/sections.json and theme/tokens.json may be changed — no application code, no config files. The check runs on GitHub's infrastructure, independent of the AI pipeline.",
       "id": "safety-callout",
       "title": "The agent cannot break the site",
       "tone": "info",
@@ -295,7 +295,7 @@
         "Element locking — further submissions for the same element return HTTP 409 while a suggestion is in-flight",
         "Kill switch — a single setting halts the pipeline before any AI call; no redeploy needed",
         "Anthropic spend cap — a hard monthly limit; when reached, the pipeline marks suggestions failed",
-        "Held-comment queue — low-confidence outputs are held for owner review before re-generating against current state"
+        "Held-comment queue — when require_approval is enabled, every suggestion is held for owner review before the PR is opened; patch is re-generated against current state on approval"
       ],
       "type": "bullet-list",
       "visible": true
