@@ -108,7 +108,7 @@
           },
           "id": "main-diamond-edges",
           "material": {
-            "color": "#ffffff",
+            "color": "#000000",
             "type": "MeshBasicMaterial",
             "wireframe": true
           },
